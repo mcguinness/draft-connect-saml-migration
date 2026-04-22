@@ -8,8 +8,8 @@ submissiontype: independent
 number:
 date:
 v: 3
-area: Security
-workgroup: Individual Submission
+# area: Security
+# workgroup: Individual Submission
 
 author:
  -
