@@ -1,7 +1,7 @@
 ---
 title: "SAML 2.0 to OpenID Connect and OAuth 2.0 Migration Profile"
 abbrev: "SAML-OIDC Migration"
-category: std
+category: info
 
 docname: draft-mcguinness-saml-oidc-migration-profile-latest
 submissiontype: independent
