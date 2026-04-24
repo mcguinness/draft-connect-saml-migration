@@ -260,8 +260,8 @@ This profile can be applied when the authorization server receives either:
 * a signed SAML `Assertion`; or
 * a signed SAML `Response` containing exactly one bearer `Assertion`.
 
-When a signed SAML `Response` is used only to convey or protect that
-Assertion, any deployment-required validation of response-level protocol fields
+When a signed SAML `Response` is used to convey or protect that Assertion,
+any deployment-required validation of response-level protocol fields
 such as `Destination` or `InResponseTo` remains outside this profile unless the
 deployment has separately established how those checks are performed. However,
 if a signed SAML `Response` wrapper is used, this profile does require the
@@ -382,9 +382,12 @@ registration or request that would create inconsistent subject semantics.
 
 Clients SHOULD register `subject_type` explicitly when using this profile.
 When `subject_type` is not registered but `saml_sp_entity_id` is present, the
-authorization server MUST apply `public` as the effective subject type. When
-`subject_type` is `pairwise` and `saml_sp_entity_id` is present, the
-authorization server MUST use the `saml_sp_entity_id` as the relying-party
+authorization server MUST apply `public` as the effective subject type. This
+default aligns with OpenID Connect Core behavior when `subject_type` is not
+registered; deployments that previously relied on SAML SP-specific (pairwise)
+identifiers SHOULD register `subject_type=pairwise` explicitly to preserve that
+behavior. When `subject_type` is `pairwise` and `saml_sp_entity_id` is present,
+the authorization server MUST use the `saml_sp_entity_id` as the relying-party
 input for pairwise subject continuity.
 
 When `saml_sp_entity_id` is present, a registered `sector_identifier_uri`
@@ -511,7 +514,7 @@ Token Exchange requested token types or direct SAML assertion introspection
 unless the relevant metadata or an equivalent administrative configuration
 indicates that support.
 
-## SAML Key Material {#saml-key-material}
+## SAML Key Material and ACR Metadata {#saml-key-material}
 
 This document does not define an authorization server metadata parameter for
 SAML signing keys or encryption keys. That omission is intentional.
@@ -586,10 +589,9 @@ replayed.
 ## Encrypted Content {#encrypted-content}
 
 This profile does not define processing of encrypted subject or attribute
-content inside an otherwise accepted assertion, including `EncryptedID`,
-`NewEncryptedID`, and `EncryptedAttribute`. An authorization server consuming
-SAML input under this profile MUST reject any effective assertion containing
-such elements.
+content inside an otherwise accepted assertion, including `EncryptedID` and
+`EncryptedAttribute`. An authorization server consuming SAML input under this
+profile MUST reject any effective assertion containing such elements.
 
 ## SAML and OAuth Issuer Boundary {#issuer-binding}
 
@@ -712,12 +714,13 @@ Any clock skew allowance MUST be consistent with local security policy and
 SHOULD NOT exceed five minutes, in accordance with {{SAML2-CORE}} Section
 2.5.1.2.
 
-When an `AuthnStatement` is present, deployments often also evaluate the time
-elapsed since `AuthnStatement/@AuthnInstant` against a local freshness window.
-Such an assertion-age check is independent of the
-`Conditions/@NotOnOrAfter` validity constraint and of `SessionNotOnOrAfter`.
-Many enterprise deployments use a window on the order of several hours; 8 hours
-is a common operational choice.
+When an `AuthnStatement` is present, the authorization server SHOULD verify
+that the time elapsed since `AuthnStatement/@AuthnInstant` does not exceed a
+deployment-configured freshness window. In the absence of a stricter local
+policy, a maximum freshness window of 8 hours is RECOMMENDED, consistent with
+typical enterprise SSO session durations. Such an assertion-age check is
+independent of the `Conditions/@NotOnOrAfter` validity constraint and of
+`SessionNotOnOrAfter`.
 
 Client authentication does not replace SAML assertion validation. A valid
 client cannot cause an invalid or misbound SAML assertion to become acceptable
@@ -821,7 +824,7 @@ protocol level. This profile narrows that rule: an omitted
 | requested_token_type value | Requested token | scope requirement | Target-selection requirement |
 |---|---|---|---|
 | `urn:ietf:params:oauth:token-type:refresh_token` | Refresh token | `scope` MUST be present and MUST include `offline_access`. An absent `scope` parameter MUST be treated as a missing `offline_access` value and rejected with `invalid_request`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them. |
-| `urn:ietf:params:oauth:token-type:id_token` | ID Token | `scope` MUST be present and MUST include `openid`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them. |
+| `urn:ietf:params:oauth:token-type:id_token` | ID Token | `scope` MUST be present and MUST include `openid`. An absent `scope` parameter MUST be rejected with `invalid_request`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them. |
 | `urn:ietf:params:oauth:token-type:access_token` | Access token | `scope` is OPTIONAL. The request MAY omit `scope` entirely or contain only OAuth scope values without `openid`. | The client MAY send `resource`, `audience`, or both. When both are present, they MUST identify a consistent target service set as understood by the authorization server. |
 
 Target-selection processing for access token requests is defined in
@@ -1064,9 +1067,8 @@ exchange. However, when issuing an access token, the authorization server:
   Local Account and to a subject representation consistent with
   {{subject-identifier-mapping}};
 * MUST audience-restrict the token to the resolved target service set; and
-* MAY represent that audience restriction in the token value itself, associated
-  token metadata, or related introspection data according to the authorization
-  server's access token profile.
+* MAY represent that audience restriction in the token value itself or
+  associated token metadata.
 
 If the granted scope includes `openid`, the authorization server MUST issue an
 access token that is valid at the OpenID Provider's UserInfo endpoint. Under
@@ -2273,9 +2275,12 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 This appendix is non-normative.
 
 Many InCommon deployments use `eduPerson` attributes, including the REFEDS
-Research and Scholarship attribute bundle. The core rules in {{claim-mapping}} still
-govern claim typing, precedence, and subject handling. Within that framework,
-deployments commonly use the following mappings and constraints:
+Research and Scholarship attribute bundle. InCommon deployments commonly use
+`urn:oid:` Name values in addition to friendly names; the mapping rules in
+{{attribute-claims}} govern how such OID-based names are resolved to OpenID
+Connect claims. The core rules in {{claim-mapping}} still govern claim typing,
+precedence, and subject handling. Within that framework, deployments commonly
+use the following mappings and constraints:
 
 * `mail` to `email`
 * `displayName` to `name`
