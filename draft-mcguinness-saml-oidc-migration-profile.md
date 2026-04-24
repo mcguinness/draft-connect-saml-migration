@@ -126,23 +126,23 @@ informative:
 
 --- abstract
 
-This document defines a migration profile for deployments that transition
-existing SAML 2.0 single sign-on integrations to OpenID Connect and OAuth 2.0
-while preserving an existing relying-party trust relationship. The profile
-defines client metadata that binds an OAuth client to an existing SAML Service
-Provider entity identifier, authorization server metadata that binds an OAuth
-issuer to an existing SAML Identity Provider entity identifier, and rules for
-mapping SAML subject identifiers, authentication statements, authentication
-context, and selected SAML attributes to OpenID Connect claims. The profile
-also defines use of OAuth 2.0 Token Exchange to obtain a refresh token, access
-token, or ID Token from SAML input, and an introspection extension that
-validates SAML input and returns normalized claims as JSON. Accepted SAML input
-can be either a signed SAML assertion or a signed SAML `Response` wrapper that
-conveys exactly one bearer assertion.
+This document defines a migration profile for SAML 2.0 Service Provider
+deployments transitioning to OpenID Connect and OAuth 2.0. The profile extends
+the existing SAML trust relationship rather than replacing it: client metadata
+binds an OAuth client to an existing SAML SP entity identifier, authorization
+server metadata binds an OAuth issuer to an existing SAML IdP entity
+identifier, and mapping rules translate SAML subject identifiers,
+authentication context, and attributes into OpenID Connect claims.
+
+Two operational patterns are defined. Token Exchange allows a client to present
+a SAML assertion and receive an access token, refresh token, or ID Token. A
+SAML assertion introspection extension allows a client to validate a SAML
+assertion and receive normalized JSON claims without issuing any OAuth token.
+Both patterns accept either a signed SAML assertion or a signed SAML `Response`
+wrapper conveying exactly one bearer assertion.
 
 The intent is to let relying parties adopt OAuth 2.0 and OpenID Connect without
-changing the underlying enterprise SSO trust model or requiring applications to
-relink existing user accounts.
+changing the underlying SSO trust model or relinking existing user accounts.
 
 --- middle
 
@@ -399,9 +399,9 @@ authorization server MUST treat them as the same relying-party context for
 claim release and subject continuity under this profile.
 
 If multiple OAuth clients sharing the same `saml_sp_entity_id` present
-conflicting `subject_type` values, the authorization server MUST either apply a
-single effective subject type for that shared binding or reject the
-registration or request that would create inconsistent subject semantics.
+conflicting `subject_type` values, the authorization server MUST reject the
+registration or runtime request that would create inconsistent subject
+semantics.
 
 Clients SHOULD register `subject_type` explicitly when using this profile.
 When `subject_type` is not registered but `saml_sp_entity_id` is present, the
@@ -461,6 +461,9 @@ When `saml_metadata_uri` is present:
   `EntityDescriptor` whose `entityID` attribute exactly matches
   `saml_idp_entity_id`; if this validation fails, the retrieved document
   MUST NOT be used;
+* if the retrieved SAML metadata document includes an XML signature,
+  implementations SHOULD validate that signature against a pre-configured
+  trust anchor before using the document;
 * the authorization server SHOULD make the metadata available in a form suitable
   for standard SAML metadata processing;
 * clients and migration tooling MAY use the metadata to correlate the OAuth
@@ -694,8 +697,12 @@ bearer confirmation is sufficient. For a usable bearer `SubjectConfirmationData`
 * `NotOnOrAfter`, if present, MUST be in the future at the time of processing;
 * `Recipient`, if present, MUST match a recipient URI or ACS endpoint
   associated by local configuration or SAML metadata with the bound
-  `saml_sp_entity_id`. This check applies to assertions submitted under both
-  the Token Exchange pattern and the introspection pattern;
+  `saml_sp_entity_id`. The valid `Recipient` values for a given
+  `saml_sp_entity_id` are the ACS URLs registered in the bound SP's SAML
+  metadata or equivalent administrative configuration; the AS's own token
+  endpoint and introspection endpoint are not valid `Recipient` values under
+  this profile. This check applies to assertions submitted under both the
+  Token Exchange pattern and the introspection pattern;
 * `InResponseTo`, if present, MUST either have been validated by the component
   that handled the front-channel SAML exchange or be validated by equivalent
   state known to the authorization server;
@@ -712,9 +719,9 @@ bearer confirmation is sufficient. For a usable bearer `SubjectConfirmationData`
 
 The authorization server MUST enforce any applicable SAML one-time-use,
 replay-prevention, and assertion freshness requirements associated with the
-trusted SAML deployment. At minimum, it MUST detect reuse of the same trusted
-assertion identifier from the same SAML Assertion Issuer until the assertion's
-validity window or local freshness window has expired. Whether reuse within that
+trusted SAML deployment. At minimum, it MUST detect reuse of the same `Assertion/@ID` value from the
+same SAML Assertion Issuer until the assertion's validity window or local
+freshness window has expired. Whether reuse within that
 window is accepted, rejected, or further constrained by the authenticated client
 and bound `saml_sp_entity_id` is a deployment policy decision; a stricter rule,
 where stated below, takes precedence. The authorization server MUST also enforce
@@ -1205,7 +1212,9 @@ OPTIONAL. If sent, the value MUST be
 `urn:ietf:params:oauth:token-type:saml2`.
 When a SAML `<Response>` wrapper is supplied, this token type hint still
 identifies the effective enclosed SAML 2.0 assertion rather than the wrapper
-element itself.
+element itself. If a `token_type_hint` value other than
+`urn:ietf:params:oauth:token-type:saml2` is sent, the authorization server
+SHOULD return an HTTP 400 response.
 
 This profile does not define a request parameter for selecting a subset of
 normalized claims in the introspection response.
@@ -1535,8 +1544,9 @@ determine `sub` using the first applicable rule:
    non-reassignable pairwise identifier by combining the Stable Local Subject
    Key and the bound `saml_sp_entity_id` using a collision-resistant method.
    The pairwise subject computation defined in Section 8 of {{OIDC-CORE}} is a
-   suitable derivation method. The authorization server MUST persist the
-   resulting mapping.
+   suitable derivation method, using `saml_sp_entity_id` as the sector
+   identifier input to that computation. The authorization server MUST persist
+   the resulting mapping.
 
 The `pairwise-id` attribute value has the format `localpart@scope` as
 defined by {{SAML2-SUBJ-ID}}. When a
@@ -1621,7 +1631,9 @@ When a SAML assertion contains an `AuthnStatement`, the authorization server
 SHOULD map its contents as follows:
 
 * `AuthnStatement/@AuthnInstant`, when mapped, MUST be emitted as the
-  OpenID Connect `auth_time` claim as a NumericDate value.
+  OpenID Connect `auth_time` claim as a NumericDate value. Implementations
+  MUST convert the XML dateTime value to the number of seconds elapsed since
+  1970-01-01T00:00:00Z when producing this NumericDate value.
 * `AuthnContext/AuthnContextClassRef` maps to the OpenID Connect `acr` claim.
   The value SHOULD be copied without transformation. Clients operating under
   this migration profile MUST be prepared to receive SAML authentication
@@ -1665,6 +1677,12 @@ for selection exists, the authorization server SHOULD prefer the statement with
 the most recent `AuthnInstant` value. If the authorization server cannot
 determine the authoritative statement unambiguously, it SHOULD omit ambiguous
 derived claims rather than misstate them.
+
+In assertions produced by SAML identity proxying, the most recent
+`AuthnInstant` may reflect the proxying IdP's re-issuance event rather than
+the original end-user authentication. Deployments using proxied assertions
+SHOULD establish an explicit policy for which `AuthnStatement` is authoritative
+and configure the authorization server accordingly.
 
 If the selected `AuthnStatement` contains `SessionNotOnOrAfter`, the
 authorization server MUST treat that instant as an upper bound on operations
@@ -1819,9 +1837,9 @@ migrated authorization context, the authorization server MUST cache the values
 of `auth_time`, `acr`, `amr`, and `sid` at the time of ID Token issuance and
 MUST return those cached values in any UserInfo response for the duration of
 the access token's validity, even if the originating SAML assertion has since
-expired. The UserInfo values for these claims MUST match the corresponding
-claims in the most recently issued ID Token for that migrated authorization
-context.
+expired. When an ID Token has been issued, the UserInfo values for these claims MUST
+match the corresponding claims in the most recently issued ID Token for that
+migrated authorization context.
 
 This profile does not require the UserInfo response to repeat every claim
 available in an ID Token, nor does it require claims omitted from the ID Token
@@ -1868,9 +1886,11 @@ established SAML processing libraries that have been tested against known XSW
 attack patterns.
 
 Implementations MUST NOT accept SAML assertions signed using deprecated
-cryptographic algorithms. RSA with SHA-1
-(`http://www.w3.org/2000/09/xmldsig#rsa-sha1`) and DSA with SHA-1
-(`http://www.w3.org/2000/09/xmldsig#dsa-sha1`) MUST be rejected. Authorization
+cryptographic algorithms. Any signature algorithm using SHA-1 as the message
+digest MUST be rejected, including RSA with SHA-1
+(`http://www.w3.org/2000/09/xmldsig#rsa-sha1`), DSA with SHA-1
+(`http://www.w3.org/2000/09/xmldsig#dsa-sha1`), and ECDSA with SHA-1
+(`http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha1`). Authorization
 servers SHOULD require RSA with SHA-256 or stronger and SHOULD document their
 minimum acceptable algorithm requirements.
 
