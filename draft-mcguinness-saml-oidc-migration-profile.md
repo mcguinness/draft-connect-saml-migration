@@ -590,6 +590,17 @@ content inside an otherwise accepted assertion, including `EncryptedID`,
 SAML input under this profile MUST reject any effective assertion containing
 such elements.
 
+## Issuer Boundary {#issuer-binding}
+
+The SAML assertion issuer and the OAuth issuer identify related but distinct
+protocol issuers. The authorization server MUST validate the SAML assertion
+`Issuer` against the `saml_idp_entity_id` value bound to the OAuth issuer. The
+`iss` claim in an ID Token issued under this profile MUST be the OAuth issuer,
+not the SAML assertion issuer.
+
+The SAML assertion issuer MUST NOT be copied into the ID Token `iss` claim or
+used as a substitute for OAuth issuer metadata.
+
 ## Signature, Issuer, and Audience Binding {#signature-issuer-audience-binding}
 
 The authorization server MUST:
@@ -699,21 +710,6 @@ under this profile.
 This profile uses the SAML SP Entity ID as the primary migration key because
 SAML pairwise subject identifiers, attribute release policy, and audience
 restrictions are already typically bound to that value.
-
-# Issuer Binding {#issuer-binding}
-
-This section calls out the issuer boundary that applies throughout the profile.
-Although SAML issuer validation is performed during the input processing rules
-in {{saml-input-validation}}, the SAML assertion issuer and the OAuth issuer identify related
-but distinct protocol issuers.
-
-The authorization server MUST validate the SAML assertion `Issuer` against the
-`saml_idp_entity_id` value bound to the OAuth issuer. The `iss` claim in an ID
-Token issued under this profile MUST be the OAuth issuer, not the SAML
-assertion issuer.
-
-The SAML assertion issuer MUST NOT be copied into the ID Token `iss` claim or
-used as a substitute for OAuth issuer metadata.
 
 # Token Exchange Using a SAML Assertion {#token-exchange}
 
