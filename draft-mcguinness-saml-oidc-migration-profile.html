@@ -1230,10 +1230,10 @@ relink existing user accounts.<a href="#section-abstract-2" class="pilcrow">¶</
                 <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-encrypted-content" class="internal xref">Encrypted Content</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
-                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-issuer-boundary" class="internal xref">Issuer Boundary</a></p>
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-saml-and-oauth-issuer-bound" class="internal xref">SAML and OAuth Issuer Boundary</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5">
-                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-signature-issuer-and-audien" class="internal xref">Signature, Issuer, and Audience Binding</a></p>
+                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-signature-saml-issuer-and-a" class="internal xref">Signature, SAML Issuer, and Audience Binding</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.6">
                 <p id="section-toc.1-1.6.2.6.1"><a href="#section-6.6" class="auto internal xref">6.6</a>.  <a href="#name-bearer-subject-confirmation" class="internal xref">Bearer Subject Confirmation</a></p>
@@ -2008,9 +2008,9 @@ one enclosed <code>Assertion</code>.<a href="#section-6.1-4.2.1" class="pilcrow"
 <p id="section-6.2-1">If a signed SAML <code>Response</code> is submitted, the authorization server:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2-2.1">
-            <p id="section-6.2-2.1.1"><span class="bcp14">MAY</span> use the response signature to establish integrity and issuer authenticity
-for the enclosed <code>Assertion</code> when that <code>Assertion</code> is not independently
-signed;<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-2.1.1"><span class="bcp14">MAY</span> use the response signature to establish integrity and SAML Response Issuer
+authenticity for the enclosed <code>Assertion</code> when that <code>Assertion</code> is not
+independently signed;<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-2.2">
             <p id="section-6.2-2.2.1"><span class="bcp14">MUST NOT</span> treat successful validation of a SAML <code>Response</code> signature as proof
@@ -2057,22 +2057,44 @@ such elements.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 </div>
 <div id="issuer-binding">
 <section id="section-6.4">
-        <h3 id="name-issuer-boundary">
-<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-issuer-boundary" class="section-name selfRef">Issuer Boundary</a>
+        <h3 id="name-saml-and-oauth-issuer-bound">
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-saml-and-oauth-issuer-bound" class="section-name selfRef">SAML and OAuth Issuer Boundary</a>
         </h3>
-<p id="section-6.4-1">The SAML assertion issuer and the OAuth issuer identify related but distinct
-protocol issuers. The authorization server <span class="bcp14">MUST</span> validate the SAML assertion
-<code>Issuer</code> against the <code>saml_idp_entity_id</code> value bound to the OAuth issuer. The
-<code>iss</code> claim in an ID Token issued under this profile <span class="bcp14">MUST</span> be the OAuth issuer,
-not the SAML assertion issuer.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
-<p id="section-6.4-2">The SAML assertion issuer <span class="bcp14">MUST NOT</span> be copied into the ID Token <code>iss</code> claim or
-used as a substitute for OAuth issuer metadata.<a href="#section-6.4-2" class="pilcrow">¶</a></p>
+<p id="section-6.4-1">This profile uses distinct issuer identifiers from different protocol contexts:<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.4-2.1">
+            <p id="section-6.4-2.1.1">SAML Response Issuer: the value of the SAML <code>Response/Issuer</code> element, when a
+SAML <code>Response</code> wrapper is submitted;<a href="#section-6.4-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.4-2.2">
+            <p id="section-6.4-2.2.1">SAML Assertion Issuer: the value of the effective SAML <code>Assertion/Issuer</code>
+element;<a href="#section-6.4-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.4-2.3">
+            <p id="section-6.4-2.3.1">Trusted SAML IdP Entity ID: the <code>saml_idp_entity_id</code> value bound to the OAuth
+issuer identifier; and<a href="#section-6.4-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.4-2.4">
+            <p id="section-6.4-2.4.1">OAuth issuer identifier: the authorization server issuer value used in OAuth
+authorization server metadata and as the OpenID Connect ID Token <code>iss</code> claim.<a href="#section-6.4-2.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-6.4-3">The SAML Assertion Issuer <span class="bcp14">MUST</span> match the Trusted SAML IdP Entity ID. When a SAML
+<code>Response</code> wrapper is submitted, the SAML Response Issuer <span class="bcp14">MUST</span> also match the
+Trusted SAML IdP Entity ID.<a href="#section-6.4-3" class="pilcrow">¶</a></p>
+<p id="section-6.4-4">The OAuth issuer identifier and the Trusted SAML IdP Entity ID identify related
+but distinct protocol issuers. The <code>iss</code> claim in an ID Token issued under this
+profile <span class="bcp14">MUST</span> be the OAuth issuer identifier, not the SAML Assertion Issuer or
+SAML Response Issuer.<a href="#section-6.4-4" class="pilcrow">¶</a></p>
+<p id="section-6.4-5">The authorization server <span class="bcp14">MUST NOT</span> copy a SAML issuer value into the ID Token
+<code>iss</code> claim or use a SAML issuer value as a substitute for OAuth issuer
+metadata.<a href="#section-6.4-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="signature-issuer-audience-binding">
 <section id="section-6.5">
-        <h3 id="name-signature-issuer-and-audien">
-<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-signature-issuer-and-audien" class="section-name selfRef">Signature, Issuer, and Audience Binding</a>
+        <h3 id="name-signature-saml-issuer-and-a">
+<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-signature-saml-issuer-and-a" class="section-name selfRef">Signature, SAML Issuer, and Audience Binding</a>
         </h3>
 <p id="section-6.5-1">The authorization server <span class="bcp14">MUST</span>:<a href="#section-6.5-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-6.5-2">
@@ -2099,8 +2121,8 @@ key material, not JOSE metadata;<a href="#section-6.5-2.2.1" class="pilcrow">¶<
             <p id="section-6.5-2.3.1">if the submitted SAML input is a <code>Response</code>, verify that:<a href="#section-6.5-2.3.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.5-2.3.2.1">
-                <p id="section-6.5-2.3.2.1.1">the <code>Response</code> issuer matches the trusted SAML IdP Entity ID bound to the
-OAuth issuer as defined in <a href="#issuer-binding" class="auto internal xref">Section 6.4</a>;<a href="#section-6.5-2.3.2.1.1" class="pilcrow">¶</a></p>
+                <p id="section-6.5-2.3.2.1.1">the SAML <code>Response/Issuer</code> value matches the Trusted SAML IdP Entity ID
+defined in <a href="#issuer-binding" class="auto internal xref">Section 6.4</a>;<a href="#section-6.5-2.3.2.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-6.5-2.3.2.2">
                 <p id="section-6.5-2.3.2.2.1">the top-level <code>Response/Status/StatusCode/@Value</code> is
@@ -2113,12 +2135,13 @@ OAuth issuer as defined in <a href="#issuer-binding" class="auto internal xref">
 </li>
           <li id="section-6.5-2.4">
             <p id="section-6.5-2.4.1">validate the effective <code>Assertion</code> according to SAML 2.0 processing rules,
-including issuer, time validity (enforcing both <code>Conditions/@NotBefore</code> and
-<code>Conditions/@NotOnOrAfter</code>), conditions, and subject confirmation;<a href="#section-6.5-2.4.1" class="pilcrow">¶</a></p>
+including <code>Assertion/Issuer</code>, time validity (enforcing both
+<code>Conditions/@NotBefore</code> and <code>Conditions/@NotOnOrAfter</code>), conditions, and
+subject confirmation;<a href="#section-6.5-2.4.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-6.5-2.5">
-            <p id="section-6.5-2.5.1">verify that the effective <code>Assertion</code> issuer matches the trusted SAML IdP
-Entity ID bound to the OAuth issuer as defined in <a href="#issuer-binding" class="auto internal xref">Section 6.4</a>;<a href="#section-6.5-2.5.1" class="pilcrow">¶</a></p>
+            <p id="section-6.5-2.5.1">verify that the effective SAML <code>Assertion/Issuer</code> value matches the Trusted
+SAML IdP Entity ID defined in <a href="#issuer-binding" class="auto internal xref">Section 6.4</a>;<a href="#section-6.5-2.5.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-6.5-2.6">
             <p id="section-6.5-2.6.1">verify that the effective <code>Assertion</code> contains at least one
@@ -2192,9 +2215,9 @@ assertion to be rejected as unusable under this profile.<a href="#section-6.6-2.
 <p id="section-6.7-1">The authorization server <span class="bcp14">MUST</span> enforce any applicable SAML one-time-use,
 replay-prevention, and assertion freshness requirements associated with the
 trusted SAML deployment. At minimum, it <span class="bcp14">MUST</span> detect reuse of the same trusted
-assertion identifier from the same issuer until the assertion's validity window
-or local freshness window has expired. Whether reuse within that window is
-accepted, rejected, or further constrained by the authenticated client and
+assertion identifier from the same SAML Assertion Issuer until the assertion's
+validity window or local freshness window has expired. Whether reuse within that
+window is accepted, rejected, or further constrained by the authenticated client and
 bound <code>saml_sp_entity_id</code> is a deployment policy decision under this profile,
 except where a stricter rule is stated below. The authorization server <span class="bcp14">MUST</span>
 also enforce any applicable SAML proxying restrictions.<a href="#section-6.7-1" class="pilcrow">¶</a></p>
