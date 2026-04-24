@@ -148,19 +148,40 @@ relink existing user accounts.
 
 # Introduction {#introduction}
 
-Many enterprise and SaaS deployments already have a stable SAML 2.0 trust
-relationship between an Identity Provider (IdP) and a Service Provider (SP).
-When the same relying party later moves to OpenID Connect or OAuth 2.0, the
-deployment often has to create a new client registration, a new issuer
-relationship, and a new subject identifier model. In practice, this can break
-subject continuity, claim release policy, assurance signaling, and operational
-trust.
+Many enterprise and SaaS deployments have a stable SAML 2.0 trust relationship
+between an Identity Provider (IdP) and a Service Provider (SP). When a relying
+party moves to OpenID Connect or OAuth 2.0, it typically must create a new
+client registration, a new issuer relationship, and a new subject identifier
+model — breaking the subject continuity, claim release policy, assurance
+signaling, and operational trust the deployment already relies on.
 
-The Identity Assertion JWT Authorization Grant
-{{I-D.ietf-oauth-identity-assertion-authz-grant}} defines a SAML-specific
-interoperability path for obtaining OAuth artifacts from an existing SAML
-deployment. This document extracts the migration-specific aspects of that
-approach and defines them as a reusable OAuth and OpenID Connect profile.
+This profile addresses four recurring scenarios in which preserving that
+existing trust relationship matters:
+
+* **API access from a SAML-authenticated session.** An SP holds a SAML
+  assertion and needs an OAuth access token to call APIs protected by an
+  authorization server operated by the same authority as the SAML IdP. Token
+  Exchange under this profile converts the existing assertion into an access
+  token, refresh token, or ID Token without a separate interactive login.
+
+* **Delegated SAML processing.** An application wants identity claims as
+  normalized JSON without implementing SAML XML parsing or XML signature
+  validation. The introspection pattern lets the authorization server absorb
+  that complexity and return structured claims over a plain HTTPS endpoint,
+  leaving the application with no SAML dependency.
+
+* **Stack modernization and post-quantum readiness.** SAML XML signature
+  libraries are not well positioned for post-quantum cryptography migration.
+  By submitting assertions to the authorization server and receiving JOSE-based
+  tokens in return, the relying party can retire its XML processing stack and
+  adopt post-quantum-ready JWT libraries without waiting for PQ support to land
+  in SAML tooling.
+
+* **Non-disruptive migration.** An SP wants to adopt OAuth 2.0 and OpenID
+  Connect without forcing end users to reauthenticate or requiring
+  administrators to reconfigure existing identity bindings. This profile
+  preserves the subject identifiers and claim release policy the SAML SP
+  already relies on, enabling a gradual migration.
 
 This document does not define a new grant type, a new assertion format, or a
 replacement for SAML Web Browser SSO. Instead, it defines a profile that:
@@ -170,11 +191,13 @@ replacement for SAML Web Browser SSO. Instead, it defines a profile that:
 * defines how a SAML assertion can be exchanged for an OAuth 2.0 or OpenID
   Connect token;
 * defines how a SAML assertion can be introspected when token issuance is not
-  needed;
-* preserves subject continuity and claim continuity across the migration.
+  needed; and
+* preserves subject and claim continuity across the migration.
 
-Where {{saml-input-validation}} permits it, a signed SAML `Response` wrapper carrying exactly
-one bearer assertion can be submitted instead of a bare assertion.
+This profile extracts the migration-specific aspects of the approach defined in
+the Identity Assertion JWT Authorization Grant
+{{I-D.ietf-oauth-identity-assertion-authz-grant}} and defines them as a
+standalone, reusable OAuth and OpenID Connect profile.
 
 # Conventions and Terminology
 
@@ -652,8 +675,8 @@ The authorization server MUST:
    the bound `saml_sp_entity_id`, and MUST NOT by themselves invalidate the
    assertion; and
 8. reject the SAML input if client authentication, assertion audience, and the
-   bound `saml_sp_entity_id` do not identify the same relying-party migration
-   context.
+   bound `saml_sp_entity_id` do not all identify the same relying-party
+   migration context.
 
 An authorization server consuming SAML input under this profile MUST reject any
 encrypted assertion, any submitted SAML input that is neither an `Assertion` nor
@@ -682,8 +705,8 @@ bearer confirmation is sufficient. For a usable bearer `SubjectConfirmationData`
 * `Address`, if present, MUST either have been validated by the component that
   handled the front-channel SAML exchange or be validated by deployment-
   specific means available to the authorization server; and
-* values that cannot be validated under the preceding rules MUST cause the
-  assertion to be rejected as unusable under this profile.
+* if any present value cannot be validated under the preceding rules, the
+  authorization server MUST reject the assertion as unusable under this profile.
 
 ## Replay and Freshness {#replay-freshness}
 
@@ -692,10 +715,10 @@ replay-prevention, and assertion freshness requirements associated with the
 trusted SAML deployment. At minimum, it MUST detect reuse of the same trusted
 assertion identifier from the same SAML Assertion Issuer until the assertion's
 validity window or local freshness window has expired. Whether reuse within that
-window is accepted, rejected, or further constrained by the authenticated client and
-bound `saml_sp_entity_id` is a deployment policy decision under this profile,
-except where a stricter rule is stated below. The authorization server MUST
-also enforce any applicable SAML proxying restrictions.
+window is accepted, rejected, or further constrained by the authenticated client
+and bound `saml_sp_entity_id` is a deployment policy decision; a stricter rule,
+where stated below, takes precedence. The authorization server MUST also enforce
+any applicable SAML proxying restrictions.
 
 If the SAML assertion's `Conditions` element includes a `OneTimeUse`
 condition, the authorization server MUST treat the assertion as exhausted
@@ -726,7 +749,7 @@ Client authentication does not replace SAML assertion validation. A valid
 client cannot cause an invalid or misbound SAML assertion to become acceptable
 under this profile.
 
-## Migration Binding Rationale
+## Migration Binding Rationale {#migration-binding-rationale}
 
 This profile uses the SAML SP Entity ID as the primary migration key because
 SAML pairwise subject identifiers, attribute release policy, and audience
@@ -759,7 +782,7 @@ defines issuance of refresh tokens, access tokens, and ID Tokens.
 ## Request {#token-exchange-request}
 
 The client makes a Token Exchange request to the token endpoint using the
-following parameters:
+parameters described below.
 
 The following non-normative example requests an ID Token from a SAML assertion:
 
@@ -1113,13 +1136,11 @@ The authorization server SHOULD use:
   token; and
 * `invalid_scope` when the requested scope cannot be granted.
 
-The authorization server SHOULD also use `invalid_request` when the assertion
-cannot be resolved to exactly one active Local Account or when the assertion is
-rejected as replay or otherwise exhausted under {{saml-input-validation}}.
-
-The authorization server SHOULD also use `invalid_request` when a currently
-asserted stable subject identifier conflicts with an existing persisted mapping
-and no explicitly authorized administrative remapping exists.
+The authorization server SHOULD also use `invalid_request` when: the assertion
+cannot be resolved to exactly one active Local Account; the assertion is
+rejected as replay or otherwise exhausted under {{saml-input-validation}}; or a
+currently asserted stable subject identifier conflicts with an existing persisted
+mapping and no explicitly authorized administrative remapping exists.
 
 # SAML Assertion Introspection {#saml-assertion-introspection}
 
@@ -1140,7 +1161,7 @@ refresh token, or ID Token is issued.
 ## Request {#introspection-request}
 
 The client makes an introspection request to the introspection endpoint using
-the following parameters:
+the parameters described below.
 
 The following non-normative example asks the authorization server to validate a
 SAML assertion and return normalized JSON claims and SAML protocol metadata:
@@ -1876,9 +1897,8 @@ specifications that they extend.
 SAML assertions used with Token Exchange or introspection are bearer artifacts.
 Authorization servers MUST detect and prevent replay of the same assertion
 according to the security properties of the underlying SAML deployment, any
-SAML `OneTimeUse` condition, and the replay rules in {{saml-input-validation}}. Client
-authentication alone is not sufficient
-protection against replay of a stolen assertion. Authorization servers deployed
+SAML `OneTimeUse` condition, and the replay rules in {{saml-input-validation}}. Client authentication alone is not
+sufficient protection against replay of a stolen assertion. Authorization servers deployed
 across multiple nodes MUST ensure that assertion identifier state used for
 replay detection is shared across all nodes or that equivalent distributed
 coordination is in place; per-node replay stores are insufficient.
