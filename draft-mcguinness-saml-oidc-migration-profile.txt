@@ -84,7 +84,7 @@ Table of Contents
      5.3.  token_exchange_requested_token_types_supported
      5.4.  introspection_token_types_supported
      5.5.  Capability and Metadata Matrix
-     5.6.  SAML Key Material
+     5.6.  SAML Key Material and ACR Metadata
    6.  SAML Input Validation and Binding
      6.1.  Accepted SAML Inputs
      6.2.  Response Wrapper Processing
@@ -275,7 +275,7 @@ Table of Contents
 
    *  a signed SAML Response containing exactly one bearer Assertion.
 
-   When a signed SAML Response is used only to convey or protect that
+   When a signed SAML Response is used to convey or protect that
    Assertion, any deployment-required validation of response-level
    protocol fields such as Destination or InResponseTo remains outside
    this profile unless the deployment has separately established how
@@ -421,10 +421,13 @@ Table of Contents
    Clients SHOULD register subject_type explicitly when using this
    profile.  When subject_type is not registered but saml_sp_entity_id
    is present, the authorization server MUST apply public as the
-   effective subject type.  When subject_type is pairwise and
-   saml_sp_entity_id is present, the authorization server MUST use the
-   saml_sp_entity_id as the relying-party input for pairwise subject
-   continuity.
+   effective subject type.  This default aligns with OpenID Connect Core
+   behavior when subject_type is not registered; deployments that
+   previously relied on SAML SP-specific (pairwise) identifiers SHOULD
+   register subject_type=pairwise explicitly to preserve that behavior.
+   When subject_type is pairwise and saml_sp_entity_id is present, the
+   authorization server MUST use the saml_sp_entity_id as the relying-
+   party input for pairwise subject continuity.
 
    When saml_sp_entity_id is present, a registered sector_identifier_uri
    [OIDC-REGISTRATION] MUST NOT alter pairwise subject calculation under
@@ -593,7 +596,7 @@ Table of Contents
    assertion introspection unless the relevant metadata or an equivalent
    administrative configuration indicates that support.
 
-5.6.  SAML Key Material
+5.6.  SAML Key Material and ACR Metadata
 
    This document does not define an authorization server metadata
    parameter for SAML signing keys or encryption keys.  That omission is
@@ -683,9 +686,9 @@ Table of Contents
 
    This profile does not define processing of encrypted subject or
    attribute content inside an otherwise accepted assertion, including
-   EncryptedID, NewEncryptedID, and EncryptedAttribute.  An
-   authorization server consuming SAML input under this profile MUST
-   reject any effective assertion containing such elements.
+   EncryptedID and EncryptedAttribute.  An authorization server
+   consuming SAML input under this profile MUST reject any effective
+   assertion containing such elements.
 
 6.4.  SAML and OAuth Issuer Boundary
 
@@ -841,12 +844,14 @@ Table of Contents
    policy and SHOULD NOT exceed five minutes, in accordance with
    [SAML2-CORE] Section 2.5.1.2.
 
-   When an AuthnStatement is present, deployments often also evaluate
-   the time elapsed since AuthnStatement/@AuthnInstant against a local
-   freshness window.  Such an assertion-age check is independent of the
+   When an AuthnStatement is present, the authorization server SHOULD
+   verify that the time elapsed since AuthnStatement/@AuthnInstant does
+   not exceed a deployment-configured freshness window.  In the absence
+   of a stricter local policy, a maximum freshness window of 8 hours is
+   RECOMMENDED, consistent with typical enterprise SSO session
+   durations.  Such an assertion-age check is independent of the
    Conditions/@NotOnOrAfter validity constraint and of
-   SessionNotOnOrAfter.  Many enterprise deployments use a window on the
-   order of several hours; 8 hours is a common operational choice.
+   SessionNotOnOrAfter.
 
    Client authentication does not replace SAML assertion validation.  A
    valid client cannot cause an invalid or misbound SAML assertion to
@@ -1004,10 +1009,10 @@ Table of Contents
    |urn:ietf:params:oauth:token-|ID Token |scope MUST be   |This profile |
    |type:id_token               |         |present and MUST|defines no   |
    |                            |         |include openid. |resource or  |
-   |                            |         |                |audience     |
-   |                            |         |                |semantics.   |
-   |                            |         |                |Clients      |
-   |                            |         |                |SHOULD NOT   |
+   |                            |         |An absent scope |audience     |
+   |                            |         |parameter MUST  |semantics.   |
+   |                            |         |be rejected with|Clients      |
+   |                            |         |invalid_request.|SHOULD NOT   |
    |                            |         |                |send them.   |
    +----------------------------+---------+----------------+-------------+
    |urn:ietf:params:oauth:token-|Access   |scope is        |The client   |
@@ -1314,9 +1319,8 @@ Table of Contents
    *  MUST audience-restrict the token to the resolved target service
       set; and
 
-   *  MAY represent that audience restriction in the token value itself,
-      associated token metadata, or related introspection data according
-      to the authorization server's access token profile.
+   *  MAY represent that audience restriction in the token value itself
+      or associated token metadata.
 
    If the granted scope includes openid, the authorization server MUST
    issue an access token that is valid at the OpenID Provider's UserInfo
@@ -2787,7 +2791,10 @@ Appendix B.  InCommon and eduPerson Deployment Guidance
    This appendix is non-normative.
 
    Many InCommon deployments use eduPerson attributes, including the
-   REFEDS Research and Scholarship attribute bundle.  The core rules in
+   REFEDS Research and Scholarship attribute bundle.  InCommon
+   deployments commonly use urn:oid: Name values in addition to friendly
+   names; the mapping rules in Section 11.2 govern how such OID-based
+   names are resolved to OpenID Connect claims.  The core rules in
    Section 11 still govern claim typing, precedence, and subject
    handling.  Within that framework, deployments commonly use the
    following mappings and constraints:

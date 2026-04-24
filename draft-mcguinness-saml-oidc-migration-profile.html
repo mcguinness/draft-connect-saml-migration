@@ -1213,7 +1213,7 @@ relink existing user accounts.<a href="#section-abstract-2" class="pilcrow">¶</
                 <p id="section-toc.1-1.5.2.5.1"><a href="#section-5.5" class="auto internal xref">5.5</a>.  <a href="#name-capability-and-metadata-mat" class="internal xref">Capability and Metadata Matrix</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.6">
-                <p id="section-toc.1-1.5.2.6.1"><a href="#section-5.6" class="auto internal xref">5.6</a>.  <a href="#name-saml-key-material" class="internal xref">SAML Key Material</a></p>
+                <p id="section-toc.1-1.5.2.6.1"><a href="#section-5.6" class="auto internal xref">5.6</a>.  <a href="#name-saml-key-material-and-acr-m" class="internal xref">SAML Key Material and ACR Metadata</a></p>
 </li>
             </ul>
 </li>
@@ -1568,8 +1568,8 @@ SAML subject input present in the assertion.<a href="#section-3-8" class="pilcro
           <p id="section-3-10.2.1">a signed SAML <code>Response</code> containing exactly one bearer <code>Assertion</code>.<a href="#section-3-10.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-3-11">When a signed SAML <code>Response</code> is used only to convey or protect that
-Assertion, any deployment-required validation of response-level protocol fields
+<p id="section-3-11">When a signed SAML <code>Response</code> is used to convey or protect that Assertion,
+any deployment-required validation of response-level protocol fields
 such as <code>Destination</code> or <code>InResponseTo</code> remains outside this profile unless the
 deployment has separately established how those checks are performed. However,
 if a signed SAML <code>Response</code> wrapper is used, this profile does require the
@@ -1715,9 +1715,12 @@ single effective subject type for that shared binding or reject the
 registration or request that would create inconsistent subject semantics.<a href="#section-4.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.1-9">Clients <span class="bcp14">SHOULD</span> register <code>subject_type</code> explicitly when using this profile.
 When <code>subject_type</code> is not registered but <code>saml_sp_entity_id</code> is present, the
-authorization server <span class="bcp14">MUST</span> apply <code>public</code> as the effective subject type. When
-<code>subject_type</code> is <code>pairwise</code> and <code>saml_sp_entity_id</code> is present, the
-authorization server <span class="bcp14">MUST</span> use the <code>saml_sp_entity_id</code> as the relying-party
+authorization server <span class="bcp14">MUST</span> apply <code>public</code> as the effective subject type. This
+default aligns with OpenID Connect Core behavior when <code>subject_type</code> is not
+registered; deployments that previously relied on SAML SP-specific (pairwise)
+identifiers <span class="bcp14">SHOULD</span> register <code>subject_type=pairwise</code> explicitly to preserve that
+behavior. When <code>subject_type</code> is <code>pairwise</code> and <code>saml_sp_entity_id</code> is present,
+the authorization server <span class="bcp14">MUST</span> use the <code>saml_sp_entity_id</code> as the relying-party
 input for pairwise subject continuity.<a href="#section-4.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.1-10">When <code>saml_sp_entity_id</code> is present, a registered <code>sector_identifier_uri</code>
           <span>[<a href="#OIDC-REGISTRATION" class="cite xref">OIDC-REGISTRATION</a>]</span> <span class="bcp14">MUST NOT</span> alter pairwise subject calculation under this
@@ -1945,8 +1948,8 @@ indicates that support.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
 </div>
 <div id="saml-key-material">
 <section id="section-5.6">
-        <h3 id="name-saml-key-material">
-<a href="#section-5.6" class="section-number selfRef">5.6. </a><a href="#name-saml-key-material" class="section-name selfRef">SAML Key Material</a>
+        <h3 id="name-saml-key-material-and-acr-m">
+<a href="#section-5.6" class="section-number selfRef">5.6. </a><a href="#name-saml-key-material-and-acr-m" class="section-name selfRef">SAML Key Material and ACR Metadata</a>
         </h3>
 <p id="section-5.6-1">This document does not define an authorization server metadata parameter for
 SAML signing keys or encryption keys. That omission is intentional.<a href="#section-5.6-1" class="pilcrow">¶</a></p>
@@ -2050,10 +2053,9 @@ replayed.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
 <a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-encrypted-content" class="section-name selfRef">Encrypted Content</a>
         </h3>
 <p id="section-6.3-1">This profile does not define processing of encrypted subject or attribute
-content inside an otherwise accepted assertion, including <code>EncryptedID</code>,
-<code>NewEncryptedID</code>, and <code>EncryptedAttribute</code>. An authorization server consuming
-SAML input under this profile <span class="bcp14">MUST</span> reject any effective assertion containing
-such elements.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+content inside an otherwise accepted assertion, including <code>EncryptedID</code> and
+<code>EncryptedAttribute</code>. An authorization server consuming SAML input under this
+profile <span class="bcp14">MUST</span> reject any effective assertion containing such elements.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="issuer-binding">
@@ -2237,12 +2239,13 @@ evaluating time-based conditions such as <code>Conditions/@NotBefore</code>,
 Any clock skew allowance <span class="bcp14">MUST</span> be consistent with local security policy and
 <span class="bcp14">SHOULD NOT</span> exceed five minutes, in accordance with <span>[<a href="#SAML2-CORE" class="cite xref">SAML2-CORE</a>]</span> Section
 2.5.1.2.<a href="#section-6.7-4" class="pilcrow">¶</a></p>
-<p id="section-6.7-5">When an <code>AuthnStatement</code> is present, deployments often also evaluate the time
-elapsed since <code>AuthnStatement/@AuthnInstant</code> against a local freshness window.
-Such an assertion-age check is independent of the
-<code>Conditions/@NotOnOrAfter</code> validity constraint and of <code>SessionNotOnOrAfter</code>.
-Many enterprise deployments use a window on the order of several hours; 8 hours
-is a common operational choice.<a href="#section-6.7-5" class="pilcrow">¶</a></p>
+<p id="section-6.7-5">When an <code>AuthnStatement</code> is present, the authorization server <span class="bcp14">SHOULD</span> verify
+that the time elapsed since <code>AuthnStatement/@AuthnInstant</code> does not exceed a
+deployment-configured freshness window. In the absence of a stricter local
+policy, a maximum freshness window of 8 hours is <span class="bcp14">RECOMMENDED</span>, consistent with
+typical enterprise SSO session durations. Such an assertion-age check is
+independent of the <code>Conditions/@NotOnOrAfter</code> validity constraint and of
+<code>SessionNotOnOrAfter</code>.<a href="#section-6.7-5" class="pilcrow">¶</a></p>
 <p id="section-6.7-6">Client authentication does not replace SAML assertion validation. A valid
 client cannot cause an invalid or misbound SAML assertion to become acceptable
 under this profile.<a href="#section-6.7-6" class="pilcrow">¶</a></p>
@@ -2442,7 +2445,7 @@ protocol level. This profile narrows that rule: an omitted
 </td>
               <td class="text-left" rowspan="1" colspan="1">ID Token</td>
               <td class="text-left" rowspan="1" colspan="1">
-                <code>scope</code> <span class="bcp14">MUST</span> be present and <span class="bcp14">MUST</span> include <code>openid</code>.</td>
+                <code>scope</code> <span class="bcp14">MUST</span> be present and <span class="bcp14">MUST</span> include <code>openid</code>. An absent <code>scope</code> parameter <span class="bcp14">MUST</span> be rejected with <code>invalid_request</code>.</td>
               <td class="text-left" rowspan="1" colspan="1">This profile defines no <code>resource</code> or <code>audience</code> semantics. Clients <span class="bcp14">SHOULD NOT</span> send them.</td>
             </tr>
             <tr>
@@ -2768,9 +2771,8 @@ Local Account and to a subject representation consistent with
               <p id="section-7.2.5-2.3.1"><span class="bcp14">MUST</span> audience-restrict the token to the resolved target service set; and<a href="#section-7.2.5-2.3.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-7.2.5-2.4">
-              <p id="section-7.2.5-2.4.1"><span class="bcp14">MAY</span> represent that audience restriction in the token value itself, associated
-token metadata, or related introspection data according to the authorization
-server's access token profile.<a href="#section-7.2.5-2.4.1" class="pilcrow">¶</a></p>
+              <p id="section-7.2.5-2.4.1"><span class="bcp14">MAY</span> represent that audience restriction in the token value itself or
+associated token metadata.<a href="#section-7.2.5-2.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-7.2.5-3">If the granted scope includes <code>openid</code>, the authorization server <span class="bcp14">MUST</span> issue an
@@ -4487,9 +4489,12 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       </h2>
 <p id="appendix-B-1">This appendix is non-normative.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
 <p id="appendix-B-2">Many InCommon deployments use <code>eduPerson</code> attributes, including the REFEDS
-Research and Scholarship attribute bundle. The core rules in <a href="#claim-mapping" class="auto internal xref">Section 11</a> still
-govern claim typing, precedence, and subject handling. Within that framework,
-deployments commonly use the following mappings and constraints:<a href="#appendix-B-2" class="pilcrow">¶</a></p>
+Research and Scholarship attribute bundle. InCommon deployments commonly use
+<code>urn:oid:</code> Name values in addition to friendly names; the mapping rules in
+<a href="#attribute-claims" class="auto internal xref">Section 11.2</a> govern how such OID-based names are resolved to OpenID
+Connect claims. The core rules in <a href="#claim-mapping" class="auto internal xref">Section 11</a> still govern claim typing,
+precedence, and subject handling. Within that framework, deployments commonly
+use the following mappings and constraints:<a href="#appendix-B-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="appendix-B-3.1">
           <p id="appendix-B-3.1.1"><code>mail</code> to <code>email</code><a href="#appendix-B-3.1.1" class="pilcrow">¶</a></p>
