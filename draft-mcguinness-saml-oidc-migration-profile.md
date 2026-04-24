@@ -742,11 +742,36 @@ defines issuance of refresh tokens, access tokens, and ID Tokens.
 The client makes a Token Exchange request to the token endpoint using the
 following parameters:
 
+The following non-normative example requests an ID Token from a SAML assertion:
+
+~~~ http
+POST /token HTTP/1.1
+Host: as.example.edu
+Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange
+&subject_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Asaml2
+&subject_token=PHNhbWxwOlJlc3BvbnNlLi4u
+&requested_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aid_token
+&scope=openid%20profile%20email
+~~~
+
+The request parameters are summarized below:
+
+| Parameter | Requirement | Applies To | Summary |
+|---|---:|---|---|
+| `grant_type` | REQUIRED | all requests | Identifies the request as OAuth 2.0 Token Exchange. |
+| `subject_token` | REQUIRED | all requests | Carries the base64url-encoded SAML `Assertion` or SAML `Response` wrapper. |
+| `subject_token_type` | REQUIRED | all requests | Identifies the effective subject token as SAML 2.0. |
+| `requested_token_type` | REQUIRED | all requests | Selects refresh token, ID Token, or access token issuance. |
+| `scope` | Conditional | all requests | Required for refresh token and ID Token requests; optional for access token requests. |
+| `resource` | OPTIONAL | access token requests | Identifies resource URI targets using {{RFC8707}}. |
+| `audience` | OPTIONAL | access token requests | Identifies logical target services using {{RFC8693}}. |
+
 `grant_type`:
 
 REQUIRED. The value `urn:ietf:params:oauth:grant-type:token-exchange`.
-
-### SAML Subject Token
 
 `subject_token`:
 
@@ -770,46 +795,51 @@ REQUIRED. The value `urn:ietf:params:oauth:token-type:saml2`.
 When a SAML `<Response>` wrapper is supplied, this token type identifies the
 effective enclosed SAML 2.0 assertion rather than the wrapper element itself.
 
-### Requested Token Type and Scope
-
 `requested_token_type`:
 
-REQUIRED. One of the following values:
-
-* `urn:ietf:params:oauth:token-type:refresh_token` to request a refresh token;
-* `urn:ietf:params:oauth:token-type:id_token` to request an ID Token;
-* `urn:ietf:params:oauth:token-type:access_token` to request an access token.
-
-Note: {{RFC8693}} marks `requested_token_type` as OPTIONAL at the Token Exchange
-protocol level. This profile narrows that and requires it. An omitted
+REQUIRED. This profile permits only the values shown in the following table.
+{{RFC8693}} marks `requested_token_type` as OPTIONAL at the Token Exchange
+protocol level. This profile narrows that rule: an omitted
 `requested_token_type` MUST be rejected with `invalid_request`.
+
+| requested_token_type value | Requested token | scope requirement | Target-selection requirement |
+|---|---|---|---|
+| `urn:ietf:params:oauth:token-type:refresh_token` | Refresh token | `scope` MUST be present and MUST include `offline_access`. An absent `scope` parameter MUST be treated as a missing `offline_access` value and rejected with `invalid_request`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them; authorization servers SHOULD ignore them if present. |
+| `urn:ietf:params:oauth:token-type:id_token` | ID Token | `scope` MUST be present and MUST include `openid`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them; authorization servers SHOULD ignore them if present. |
+| `urn:ietf:params:oauth:token-type:access_token` | Access token | `scope` is OPTIONAL. The request MAY omit `scope` entirely or contain only OAuth scope values without `openid`. | The client MAY send `resource`, `audience`, or both. When both are present, they MUST identify a consistent target service set as understood by the authorization server. |
+
+For an access token request that includes `openid`, the target-selection rules
+are:
+
+* the authorization server MUST be an OpenID Provider and MUST publish a
+  `userinfo_endpoint` in accordance with OpenID Connect Discovery
+  {{OIDC-DISCOVERY}};
+* if both `resource` and `audience` are omitted, the effective target service set
+  defaults to the OpenID Provider's UserInfo endpoint;
+* if `resource` and/or `audience` are present, the explicitly requested targets
+  define the requested target service set and the authorization server MAY
+  additionally include the UserInfo endpoint in that set; and
+* if the authorization server does not include the UserInfo endpoint in the
+  resolved target service set, it MUST either omit `openid` from the granted
+  scope or reject the request with `invalid_target` or `invalid_scope` according
+  to local policy.
+
+For an access token request that does not include `openid`, and where both
+`resource` and `audience` are omitted, the authorization server MAY use a
+preconfigured default target service set for the authenticated client and the
+bound `saml_sp_entity_id`, or it MAY reject the request with `invalid_target`.
 
 `scope`:
 
-REQUIRED when `requested_token_type` is
-`urn:ietf:params:oauth:token-type:refresh_token` or
-`urn:ietf:params:oauth:token-type:id_token`; OPTIONAL for access token
-requests. This profile permits ordinary OAuth scope values in addition to
-OpenID Connect scopes. The following token-type-specific constraints apply:
-
-* When `requested_token_type` is
-  `urn:ietf:params:oauth:token-type:id_token`, `scope` MUST be present and
-  MUST include `openid`.
-* When `requested_token_type` is
-  `urn:ietf:params:oauth:token-type:refresh_token`, `scope` MUST be present
-  and MUST include `offline_access`. An absent `scope` parameter MUST be
-  treated as a missing `offline_access` value and the request MUST be
-  rejected with `invalid_request`.
-* A request for `urn:ietf:params:oauth:token-type:access_token` MAY omit
-  `scope` entirely or contain only OAuth scope values without `openid`.
+Conditional. The `scope` requirement depends on `requested_token_type`, as
+defined above. This profile permits ordinary OAuth scope values in addition to
+OpenID Connect scopes.
 
 This profile does not define a token-endpoint parameter for fine-grained claim
 selection. Claims included in a directly issued ID Token, and claims later made
 available through UserInfo, are determined by the granted scope, the rules in
 Claim Mapping, and the claim release policy for the relying-party relationship
 represented by the bound `saml_sp_entity_id`.
-
-### Target Selection
 
 `resource`:
 
@@ -822,33 +852,12 @@ send a single `resource` value when a resource URI is known.
 OPTIONAL. For access token requests, one or more logical target service
 identifiers as defined by {{RFC8693}}.
 
-When `requested_token_type` is
-`urn:ietf:params:oauth:token-type:access_token`, the client MAY send
-`resource`, `audience`, or both. If the requested scope includes `openid` and
-both `resource` and `audience` are omitted, the effective target service set
-defaults to the OpenID Provider's UserInfo endpoint. If the requested scope
-includes `openid` and `resource` and/or `audience` are present, the explicitly
-requested targets define the requested target service set and the
-authorization server MAY additionally include the UserInfo endpoint in that
-set. If it does not include the UserInfo endpoint, it MUST either omit
-`openid` from the granted scope or reject the request with `invalid_target` or
-`invalid_scope` according to local policy. If `openid` is absent and both
-`resource` and `audience` are omitted, the authorization server MAY use a
-preconfigured default target service set for the authenticated client and the
-bound `saml_sp_entity_id`, or it MAY reject the request with `invalid_target`.
-When both `resource` and `audience` are present, they MUST identify a
-consistent target service set as understood by the authorization server.
-
-When `requested_token_type` is
-`urn:ietf:params:oauth:token-type:refresh_token` or
-`urn:ietf:params:oauth:token-type:id_token`, this profile does not define
-target-selection semantics for `resource` or `audience`. Clients requesting
-those token types SHOULD NOT send them, and authorization servers SHOULD ignore
-them if present.
+The target-selection rules for `resource` and `audience` depend on
+`requested_token_type`, as defined above.
 
 This profile does not define the use of `actor_token`, `actor_token_type`, or
-`authorization_details` in the bootstrap exchange. Deployments MAY support them
-by separate agreement, but they are outside this profile.
+`authorization_details` in this Token Exchange request. Deployments MAY support
+them by separate agreement, but they are outside this profile.
 
 Only confidential clients can use this profile. Client authentication at the
 token endpoint uses the client's registered OAuth 2.0 client authentication
@@ -856,6 +865,8 @@ method. The authenticated client MUST be a confidential client authorized for
 the `saml_sp_entity_id` that matches the SAML assertion audience.
 
 ## Authorization Server Processing
+
+### Common Processing Rules
 
 Upon receiving the request, the authorization server MUST:
 
@@ -894,37 +905,40 @@ Local Account, more than one candidate Local Account, or a Local Account that
 is disabled, suspended, deprovisioned, or otherwise not permitted to
 authenticate.
 
-The authorization server MUST reject the request if
-`requested_token_type=urn:ietf:params:oauth:token-type:refresh_token` and the
-requested scope does not include `offline_access`.
-
-The authorization server MUST reject the request if
-`requested_token_type=urn:ietf:params:oauth:token-type:id_token` and the
-requested scope does not include `openid`.
-
-When `requested_token_type=urn:ietf:params:oauth:token-type:access_token` and
-the requested scope includes `openid`, the authorization server MUST be an
-OpenID Provider and MUST publish a `userinfo_endpoint` in accordance with
-OpenID Connect Discovery {{OIDC-DISCOVERY}}.
-
-When `requested_token_type=urn:ietf:params:oauth:token-type:access_token`, the
-authorization server MUST determine a target service set from the request or
-from preconfigured policy. If the requested scope includes `openid` and no
-explicit `resource` or `audience` is present, the resolved target service set
-MUST include the UserInfo endpoint. If the requested scope includes `openid`
-and explicit targets are present, the resolved target service set MAY include
-the UserInfo endpoint when policy allows one token to cover both the UserInfo
-endpoint and those targets. If the UserInfo endpoint is not included, the
-authorization server MUST NOT treat `openid` as granted and MUST either narrow
-the granted scope accordingly or reject the request. If the authorization
-server cannot determine an acceptable target service set, or if the request
-asks for multiple target services that policy does not allow to share a single
-token, it MUST reject the request with `invalid_target`.
+The authorization server MUST enforce the token-type-specific scope and target
+selection requirements defined in Section 8.1. If the authorization server
+cannot determine an acceptable target service set for an access token request,
+or if the request asks for multiple target services that policy does not allow
+to share a single token, it MUST reject the request with `invalid_target`.
 
 For any request that includes `scope`, the authorization server MUST apply the
 authorization and consent rules in Section 3.1. If no applicable grant policy
 exists for a requested scope, the authorization server MUST reject the request
 with `invalid_scope`.
+
+### Successful Response
+
+For any successful request, the authorization server MUST return a Token Exchange
+response as defined by {{RFC8693}}. The response:
+
+* MUST include `issued_token_type` set to the issued token type and equal to one
+  of `urn:ietf:params:oauth:token-type:refresh_token`,
+  `urn:ietf:params:oauth:token-type:id_token`, or
+  `urn:ietf:params:oauth:token-type:access_token`;
+* MUST include `access_token` containing the issued token;
+* MUST include `token_type` set to `N_A` when the issued token type is
+  `urn:ietf:params:oauth:token-type:refresh_token` or
+  `urn:ietf:params:oauth:token-type:id_token`, and otherwise set to the
+  applicable access token type such as `Bearer`;
+* MAY include `expires_in` as defined by {{RFC8693}}; and
+* MUST include `scope` when the granted scope differs from the requested scope,
+  as required by {{RFC6749}} and {{RFC8693}}.
+
+{{RFC8693}} uses the `access_token` response member to carry all issued token
+types. Clients MUST interpret the `access_token` value according to
+`issued_token_type`, as specified in {{RFC8693}} Section 2.2.
+
+### Refresh Token
 
 When issuing a refresh token, the authorization server MUST ensure that the
 issued refresh token preserves the subject continuity established by the SAML
@@ -932,6 +946,60 @@ assertion. In particular, later use of the refresh token for the same client
 MUST result in the same `sub` value that would have been derived directly from
 the SAML assertion under Local Subject Resolution, Subject Identifier Mapping,
 and Claim Mapping.
+
+If Token Exchange under this profile issues a refresh token, the client can use
+the standard OAuth 2.0 `refresh_token` grant at the same authorization server.
+
+When the authorization server issues a replacement refresh token as part of
+refresh token rotation, the replacement token MUST be bound to the same Local
+Account as the original refresh token and MUST produce the same `sub` value
+under Subject Identifier Mapping when used by the same migrated client.
+
+When the granted scope includes `openid`, the authorization server SHOULD
+return an ID Token in the first successful refresh token response for that
+refresh token. Returning such an ID Token gives the client the migrated subject
+and authentication claims in a signed, verifiable format. Any returned ID Token:
+
+* MUST use the `iss` value of the authorization server;
+* MUST use the `sub` value defined by Subject Identifier Mapping;
+* MUST apply the claim mapping rules in Claim Mapping; and
+* MUST preserve the original authentication time from the SAML
+  `AuthnStatement`, if known, in the `auth_time` claim.
+
+Subsequent refresh token responses are governed by {{OIDC-CORE}}. If an
+ID Token is returned in a later refresh response, it MUST continue to preserve
+the same `sub` and authentication continuity unless a later authentication
+event changes those values under {{OIDC-CORE}}.
+
+The refresh token issued under this profile MAY also be used as an input to
+other specifications that accept
+`urn:ietf:params:oauth:token-type:refresh_token` as a Token Exchange
+`subject_token_type`, but those subsequent exchanges are defined by the
+respective specifications, not by this document.
+
+Subsequent refresh token requests for access tokens MAY use `resource` and
+`audience` according to {{RFC8707}}, {{RFC8693}}, and authorization server policy.
+This profile does not modify their meaning in refresh token requests. Scope
+reduction in subsequent refresh token requests is governed by {{RFC6749}} and is
+not modified by this profile.
+
+When a refresh token issued under this profile expires or is revoked, the client
+MAY obtain a new SAML assertion through the SAML 2.0 deployment and perform a
+new Token Exchange request. The client MAY also use any other OAuth 2.0 or
+OpenID Connect flow that the authorization server supports.
+
+If the authorization server learns that the resolved Local Account has been
+disabled, that the authoritative SAML-authenticated session has terminated, or
+that administrative policy has revoked the migrated session, it MUST reject
+further use of any derived refresh token for session-preserving operations. It
+SHOULD also revoke or expire related access tokens and other session-bound
+artifacts according to local capabilities. This document does not define a
+logout or revocation signaling protocol between the SAML IdP and the
+authorization server. Deployments that support back-channel session
+termination signaling MAY use the mechanisms defined by {{OIDC-BC-LOGOUT}} to
+propagate SAML session termination events to registered OpenID Connect clients.
+
+### ID Token
 
 When issuing an ID Token directly from Token Exchange, that ID Token:
 
@@ -958,7 +1026,7 @@ When issuing an ID Token directly from Token Exchange, that ID Token:
 * SHOULD NOT include `azp`. If `azp` is included, it MUST equal the
   authenticated client identifier.
 
-## Access Token Behavior
+### Access Token
 
 This document does not define the syntax of an access token issued by this
 exchange. However, when issuing an access token, the authorization server:
@@ -996,30 +1064,6 @@ tokens issued under this profile. If the authorization server supports access
 token introspection, that behavior remains governed by {{RFC7662}}, the
 authorization server's access token profile, and local policy.
 
-## Successful Response
-
-On success, the authorization server returns a Token Exchange response as
-defined by {{RFC8693}} with:
-
-* `issued_token_type` set to the issued token type and equal to one of
-  `urn:ietf:params:oauth:token-type:refresh_token`,
-  `urn:ietf:params:oauth:token-type:id_token`, or
-  `urn:ietf:params:oauth:token-type:access_token`;
-* `access_token` containing the issued token; and
-* `token_type` set to `N_A` when the issued token type is
-  `urn:ietf:params:oauth:token-type:refresh_token` or
-  `urn:ietf:params:oauth:token-type:id_token`, and otherwise set to the
-  applicable access token type such as `Bearer`.
-
-The response MAY include `expires_in` as defined by {{RFC8693}}. The `scope`
-member is governed by {{RFC6749}} and {{RFC8693}}; in particular, if the granted
-scope differs from the requested scope, the response MUST include the granted
-scope value.
-
-{{RFC8693}} uses the `access_token` response member to carry all issued token
-types. Clients MUST interpret the `access_token` value according to
-`issued_token_type`, as specified in {{RFC8693}} Section 2.2.
-
 ## Error Response
 
 If the request is malformed, the authorization server MUST return an error
@@ -1048,62 +1092,6 @@ The authorization server SHOULD also use `invalid_request` when a currently
 asserted stable subject identifier conflicts with an existing persisted mapping
 and no explicitly authorized administrative remapping exists.
 
-## Use of a Bootstrap Refresh Token
-
-If the bootstrap exchange issues a refresh token, the client can use the
-standard OAuth 2.0 `refresh_token` grant at the same authorization server.
-
-When the authorization server issues a replacement refresh token as part of
-refresh token rotation, the replacement token MUST be bound to the same Local
-Account as the original bootstrap refresh token and MUST produce the same `sub`
-value under Subject Identifier Mapping when used by the same migrated client.
-
-When the granted scope includes `openid`, the authorization server SHOULD
-return an ID Token in the first successful refresh token response for that
-bootstrap refresh token. Returning such an ID Token gives the client the
-migrated subject and authentication claims in a signed, verifiable format soon
-after the bootstrap. Any returned ID Token:
-
-* MUST use the `iss` value of the authorization server;
-* MUST use the `sub` value defined by Subject Identifier Mapping;
-* MUST apply the claim mapping rules in Claim Mapping; and
-* MUST preserve the original authentication time from the SAML
-  `AuthnStatement`, if known, in the `auth_time` claim.
-
-Subsequent refresh token responses are governed by {{OIDC-CORE}}. If an
-ID Token is returned in a later refresh response, it MUST continue to preserve
-the same `sub` and authentication continuity unless a later authentication
-event changes those values under {{OIDC-CORE}}.
-
-The refresh token issued by this bootstrap pattern MAY also be used as an input
-to other specifications that accept
-`urn:ietf:params:oauth:token-type:refresh_token` as a Token Exchange
-`subject_token_type`, but those subsequent exchanges are defined by the
-respective specifications, not by this document.
-
-Subsequent refresh token requests for access tokens MAY use `resource` and
-`audience` according to {{RFC8707}}, {{RFC8693}}, and authorization server policy.
-This profile does not modify their meaning in refresh token requests. Scope
-reduction in subsequent refresh token requests is governed by {{RFC6749}} and is
-not modified by this profile.
-
-When a bootstrap refresh token expires or is revoked, the client MAY obtain a
-new SAML assertion through the SAML 2.0 deployment and perform a new Token
-Exchange to re-establish this profile's bootstrap. The client MAY also use any
-other OAuth 2.0 or OpenID Connect flow that the authorization server supports.
-This profile defines only the SAML bootstrap path.
-
-If the authorization server learns that the resolved Local Account has been
-disabled, that the authoritative SAML-authenticated session has terminated, or
-that administrative policy has revoked the migrated session, it MUST reject
-further use of any derived refresh token for session-preserving operations. It
-SHOULD also revoke or expire related access tokens and other session-bound
-artifacts according to local capabilities. This document does not define a
-logout or revocation signaling protocol between the SAML IdP and the
-authorization server. Deployments that support back-channel session
-termination signaling MAY use the mechanisms defined by {{OIDC-BC-LOGOUT}} to
-propagate SAML session termination events to registered OpenID Connect clients.
-
 # SAML Assertion Introspection
 
 This section defines an introspection extension for cases in which the client
@@ -1125,7 +1113,25 @@ refresh token, or ID Token is issued.
 The client makes an introspection request to the introspection endpoint using
 the following parameters:
 
-### SAML Token
+The following non-normative example asks the authorization server to validate a
+SAML assertion and return normalized JSON claims and SAML protocol metadata:
+
+~~~ http
+POST /introspect HTTP/1.1
+Host: as.example.edu
+Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+Content-Type: application/x-www-form-urlencoded
+
+token=PHNhbWxwOlJlc3BvbnNlLi4u
+&token_type_hint=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Asaml2
+~~~
+
+The request parameters are summarized below:
+
+| Parameter | Requirement | Summary |
+|---|---:|---|
+| `token` | REQUIRED | Carries the base64url-encoded SAML `Assertion` or SAML `Response` wrapper. |
+| `token_type_hint` | OPTIONAL | Identifies the effective token as a SAML 2.0 assertion. |
 
 `token`:
 
@@ -1154,8 +1160,6 @@ element itself.
 This profile does not define a request parameter for selecting a subset of
 normalized claims in the introspection response.
 
-### Client Authentication
-
 Only confidential clients can use this profile. Client authentication for the
 introspection endpoint is performed according to {{RFC7662}} and authorization
 server policy. The authenticated client MUST be authorized for the
@@ -1163,9 +1167,11 @@ server policy. The authenticated client MUST be authorized for the
 
 ## Authorization Server Processing
 
+### Common Processing Rules
+
 Upon receiving the request, the authorization server MUST:
 
-1. authenticate or authorize the client for use of the introspection endpoint;
+1. authenticate the client and authorize it to use the introspection endpoint;
 2. validate the SAML input as described in Section 6;
 3. verify that the authenticated client is authorized for the
    `saml_sp_entity_id` that matches the SAML assertion audience;
@@ -1176,6 +1182,8 @@ Upon receiving the request, the authorization server MUST:
 6. apply the claim release policy for that same relying-party relationship
    before returning any claims.
 
+### Inactive Response
+
 If the SAML assertion is invalid, expired, audience-mismatched, otherwise not
 usable for the client, wrapped in a SAML `Response` whose `Status` is not
 acceptable under this profile, cannot be resolved to exactly one active Local
@@ -1184,7 +1192,7 @@ assertion or bound relying-party context, the authorization server MUST return a
 successful introspection response with `"active": false` and SHOULD NOT include
 additional members.
 
-## Successful Response
+### Successful Response
 
 For an active SAML assertion, the authorization server MUST return an
 introspection response as defined by {{RFC7662}} with:
@@ -1320,7 +1328,7 @@ This profile does not require the introspection response to include OAuth token
 metadata fields such as `scope`, `token_type`, `exp`, or `iss`, because no
 OAuth token is being issued by the introspection operation.
 
-## Error Handling
+## Error Response
 
 If the introspection request is malformed — for example, the `token` parameter
 is absent or its value cannot be decoded as valid base64url — the authorization
@@ -1982,13 +1990,13 @@ Introspection Response registry established by {{RFC7662}}:
 * Response Description: JSON object containing normalized subject and claim
   values derived from the introspected SAML assertion for the authorized client
 * Change Controller: IESG
-* Specification Document(s): This document, Section 9.3
+* Specification Document(s): This document, Section 9.2.3
 
 * Response Name: `saml`
 * Response Description: JSON object containing normalized SAML protocol metadata
   extracted from the validated SAML input
 * Change Controller: IESG
-* Specification Document(s): This document, Section 9.3
+* Specification Document(s): This document, Section 9.2.3
 
 --- back
 
