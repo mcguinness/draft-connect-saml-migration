@@ -2129,6 +2129,17 @@ and an authorization server publishing the following relevant metadata:
 
 ## Convert SAML to an ID Token
 
+The calendar application has completed SAML Web SSO and received a signed
+assertion from the IdP for Alice, a user who already has a Local Account at
+the authorization server. The application wants a signed OpenID Connect ID
+Token it can verify locally and use to establish Alice's session — without
+implementing a separate OIDC authorization code flow. It presents the SAML
+assertion to the token endpoint via Token Exchange, requesting an ID Token
+with `scope=openid profile email`. The authorization server validates the
+assertion, resolves Alice's Local Account, derives her pairwise `sub`, maps
+her authentication claims, and returns an ID Token directly in the Token
+Exchange response.
+
 ~~~ http
 POST /token HTTP/1.1
 Host: login.example.com
@@ -2172,6 +2183,32 @@ like:
 ~~~
 
 ## Delegate SAML Validation with Introspection
+
+The calendar application wants to avoid implementing SAML XML signature
+validation and assertion processing entirely. It uses an SP-initiated flow:
+before redirecting Alice to the IdP, it generates an `AuthnRequest` and saves
+local state including the request ID and ACS URL. When the IdP returns a signed
+SAML Response to the ACS, the application submits it directly to the AS's
+introspection endpoint rather than parsing it. The AS validates the XML
+signatures, checks the assertion against all profile rules, and returns
+normalized claims alongside SAML protocol metadata as JSON. The application
+then correlates the returned `saml` values against its stored request state to
+confirm the response was intended for this flow, and uses the `claims` object
+to establish Alice's session.
+
+Before redirecting Alice to the IdP, the SP stores local request state such as:
+
+~~~ json
+{
+  "request_id": "_sp-authnrequest-8f3a",
+  "acs_url": "https://calendar.example.com/saml/acs",
+  "sp_entity_id": "https://calendar.example.com/saml/sp",
+  "idp_entity_id": "https://login.example.com/idp"
+}
+~~~
+
+After the IdP returns a SAML Response to the ACS, the application submits it
+to the introspection endpoint:
 
 ~~~ http
 POST /introspect HTTP/1.1
@@ -2224,21 +2261,9 @@ token=PHNhbWwycDpSZXNwb25zZSB4bWxuczpzYW1sMj0iLi4uIiB4bWxuczpzYW1sMnA9Ii4uLiI-Li
 }
 ~~~
 
-Before redirecting the user to the SAML IdP, the SP creates an AuthnRequest and
-stores local request state such as:
-
-~~~ json
-{
-  "request_id": "_sp-authnrequest-8f3a",
-  "acs_url": "https://calendar.example.com/saml/acs",
-  "sp_entity_id": "https://calendar.example.com/saml/sp",
-  "idp_entity_id": "https://login.example.com/idp"
-}
-~~~
-
 After the authorization server validates XML signatures and SAML assertion
-processing rules, the SP performs local correlation and location checks over the
-returned JSON values, for example:
+processing rules and returns the active response, the SP performs local
+correlation and location checks over the returned JSON values, for example:
 
 ~~~ text
 saml.input_type == "response"
@@ -2257,7 +2282,15 @@ current_time < saml.assertion.not_on_or_after
 
 ## Convert SAML to an Access Token or Refresh Token
 
-The client can request an access token for an explicit API target:
+The calendar application holds a SAML assertion for Alice and needs OAuth
+tokens for two different purposes: calling a protected payments API in the same
+organization, and establishing a long-lived session that can outlive the SAML
+assertion itself. Both are handled via Token Exchange; the `requested_token_type`
+parameter selects which artifact the AS issues.
+
+In the first case, the application needs a Bearer access token scoped to the
+payments API. It uses resource indicators to identify the target resource and
+requests only the scopes required for that service:
 
 ~~~ http
 POST /token HTTP/1.1
@@ -2284,8 +2317,11 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 }
 ~~~
 
-Alternatively, the client can request a refresh token to bootstrap a migrated
-session:
+In the second case, the application wants a refresh token to bootstrap a
+long-lived migrated session. It includes `offline_access` in scope alongside
+the OpenID Connect scopes it needs. The AS issues a refresh token bound to
+Alice's Local Account; subsequent refresh token grants can produce access tokens
+and ID Tokens without requiring a new SAML assertion:
 
 ~~~ http
 POST /token HTTP/1.1
