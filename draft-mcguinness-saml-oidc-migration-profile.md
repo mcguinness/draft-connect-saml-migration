@@ -283,21 +283,22 @@ binding.
 
 ## Authorization and Consent Model
 
-This profile does not treat a valid SAML assertion as end-user consent to issue
-OAuth tokens, release OpenID Connect claims, or return an active introspection
-response. The SAML assertion proves the authentication event and supplies
-identity inputs for the migrated relying-party relationship; authorization to
-issue tokens, release claims, or return claims remains an authorization server
-policy decision.
+The authorization server MUST NOT treat a valid SAML assertion as end-user
+consent to issue OAuth tokens, release OpenID Connect claims, or return an
+active introspection response. The assertion proves the authentication event and
+supplies identity inputs; authorization remains an authorization server policy
+decision.
 
-The authorization server MUST have an explicit authorization basis before
-issuing a token or returning an active introspection response under this
-profile. That basis MUST be bound to the authenticated client, the
-`saml_sp_entity_id`, and the resolved Local Account. For Token Exchange, it
-MUST also be bound to the requested token type, requested scope, and, for access
-tokens, the resolved target service set. For introspection, it MUST authorize
-the authenticated client to validate the presented SAML input and receive any
-returned claims for the bound relying-party relationship.
+Before issuing a token or returning an active introspection response, the
+authorization server MUST have an explicit authorization basis. That basis:
+
+* MUST be bound to the authenticated client, the `saml_sp_entity_id`, and the
+  resolved Local Account;
+* for Token Exchange, MUST be bound to the requested token type, requested
+  scope, and, for access tokens, the resolved target service set; and
+* for introspection, MUST authorize the authenticated client to validate the
+  presented SAML input and receive any returned claims for the bound
+  relying-party relationship.
 
 The authorization basis MAY come from static configuration, administrative
 consent, a previously recorded authorization grant at the same authorization
@@ -310,29 +311,31 @@ SAML attributes MAY be used as inputs to an already-established authorization
 policy rule, but the policy rule itself MUST exist independently of the
 assertion presented in the current request.
 
-When the requested scope includes `offline_access`, the authorization server
-MUST have policy authorization to issue a refresh token to the authenticated
-client for the resolved Local Account and bound `saml_sp_entity_id`. A prior
-SAML SSO event by itself is not sufficient authorization to issue a refresh
-token. If the authorization server requires end-user consent for refresh token
-issuance and no valid consent or equivalent policy exists, it MUST reject the
-request with `invalid_scope` or `unauthorized_client` according to local policy.
+For requests involving refresh tokens, ID Tokens, OpenID Connect scopes, target
+services, or claim release, the authorization server MUST apply the following
+additional rules:
 
-When the requested token type is
-`urn:ietf:params:oauth:token-type:id_token`, or when an access token request
-includes `openid`, the authorization server MUST have policy authorization to
-release the resulting OpenID Connect subject and claims to the authenticated
-client under the bound `saml_sp_entity_id`. The authorization server MUST NOT
-release claims solely because the corresponding SAML attributes are present in
-the assertion.
+* if the requested scope includes `offline_access`, policy MUST authorize
+  refresh token issuance to the authenticated client for the resolved Local
+  Account and bound `saml_sp_entity_id`;
+* a prior SAML SSO event by itself MUST NOT authorize refresh token issuance;
+* if the requested token type is
+  `urn:ietf:params:oauth:token-type:id_token`, or if an access token request
+  includes `openid`, policy MUST authorize release of the resulting OpenID
+  Connect subject and claims to the authenticated client under the bound
+  `saml_sp_entity_id`;
+* the authorization server MUST NOT release claims solely because corresponding
+  SAML attributes are present in the assertion; and
+* if the requested OAuth scope, OpenID Connect scope, target service, or claim
+  set exceeds what the prior SAML relying-party relationship and current
+  authorization server policy permit, the authorization server MUST either
+  narrow the granted scope and returned claims to the permitted set or reject the
+  request with `invalid_scope`, `invalid_target`, or `unauthorized_client`, as
+  appropriate.
 
-If the requested OAuth scope, OpenID Connect scope, requested target service, or
-claim set exceeds what the prior SAML relying-party relationship and current
-authorization server policy permit, the authorization server MUST either narrow
-the granted scope and returned claims to the permitted set or reject the
-request with `invalid_scope`, `invalid_target`, or `unauthorized_client`, as
-appropriate. The authorization server MUST NOT silently broaden claim release
-beyond what is permitted for the same relying-party relationship.
+If end-user consent is required by local policy and no valid consent or
+equivalent policy exists, the authorization server MUST reject the request with
+`invalid_scope` or `unauthorized_client` according to local policy.
 
 # Client Registration
 
@@ -552,26 +555,30 @@ always one SAML `Assertion`. The submitted SAML input MUST therefore be either:
 
 ## Response Wrapper Processing
 
-If a signed SAML `Response` is submitted, the authorization server MAY use the
-response signature to establish integrity and issuer authenticity for the
-enclosed `Assertion` when that `Assertion` is not independently signed.
-However, this profile does not define response-level protocol processing.
-Successful validation of a SAML `Response` signature MUST NOT by itself be
-treated as proof that response-level fields such as `Destination`, `Consent`,
-or `Response/@InResponseTo` have been validated, and those fields MUST NOT by
-themselves determine subject continuity, claim release, or target binding under
-this profile. This profile does require limited processing of the `Status`
-element when a `Response` wrapper is used: the top-level `StatusCode` value
-MUST be `urn:oasis:names:tc:SAML:2.0:status:Success`, and a subordinate
-`StatusCode` element MUST NOT be present. `StatusMessage` and `StatusDetail`,
-if present, MAY be ignored except for logging or diagnostics. Deployments that
-require additional response-level checks MUST perform them outside this profile
-before or during extraction of the effective `Assertion`. Such additional
-checks SHOULD include, at minimum: verification that
-`Response/@Destination` matches the intended endpoint; validation that
+If a signed SAML `Response` is submitted, the authorization server:
+
+* MAY use the response signature to establish integrity and issuer authenticity
+  for the enclosed `Assertion` when that `Assertion` is not independently
+  signed;
+* MUST NOT treat successful validation of a SAML `Response` signature as proof
+  that response-level fields such as `Destination`, `Consent`, or
+  `Response/@InResponseTo` have been validated;
+* MUST NOT allow response-level fields by themselves to determine subject
+  continuity, claim release, or target binding under this profile;
+* MUST verify that the top-level `StatusCode` value is
+  `urn:oasis:names:tc:SAML:2.0:status:Success`;
+* MUST reject the response if a subordinate `StatusCode` element is present; and
+* MAY ignore `StatusMessage` and `StatusDetail` except for logging or
+  diagnostics.
+
+This profile does not define full response-level protocol processing.
+Deployments that require additional response-level checks MUST perform them
+outside this profile before or during extraction of the effective `Assertion`.
+Such additional checks SHOULD include, at minimum, verification that
+`Response/@Destination` matches the intended endpoint, validation that
 `Response/@InResponseTo`, if present, corresponds to a previously issued
-`<AuthnRequest>` ID; and confirmation that the `Response/@ID` value has not
-been replayed.
+`<AuthnRequest>` ID, and confirmation that the `Response/@ID` value has not been
+replayed.
 
 ## Encrypted Content
 
@@ -850,11 +857,7 @@ the `saml_sp_entity_id` that matches the SAML assertion audience.
 
 ## Authorization Server Processing
 
-Upon receiving the request, the authorization server MUST perform the following
-steps. Steps 1 through 3 are mutually dependent: client authentication
-determines which `saml_sp_entity_id` bindings are applicable, and assertion
-audience validation requires knowing those bindings. Implementations SHOULD
-evaluate these steps as an integrated unit.
+Upon receiving the request, the authorization server MUST:
 
 1. authenticate the client in accordance with its registered client
    authentication method;
@@ -877,6 +880,11 @@ evaluate these steps as an integrated unit.
    claims needed for the issued token according to Claim Mapping; and
 9. issue the requested token type, bound to the authenticated client and the
    end-user where applicable, if the request is approved.
+
+Steps 1 through 3 are mutually dependent: client authentication determines which
+`saml_sp_entity_id` bindings are applicable, and assertion audience validation
+requires knowing those bindings. Implementations SHOULD evaluate these steps as
+an integrated unit.
 
 The authorization server MUST reject the request if the SAML assertion was
 issued for a different SAML SP than the one bound to the authenticated client.
@@ -913,25 +921,10 @@ server cannot determine an acceptable target service set, or if the request
 asks for multiple target services that policy does not allow to share a single
 token, it MUST reject the request with `invalid_target`.
 
-A valid SAML assertion does not by itself authorize arbitrary OAuth scopes. For
-any request that includes `scope`, the authorization server MUST evaluate the
-requested scopes against explicit authorization policy for the authenticated
-client, the bound `saml_sp_entity_id`, and the resolved target service set, if
-any. The authorization server MUST NOT grant a scope solely because the SAML
-assertion is valid. If no applicable grant policy exists for a requested scope,
-the authorization server MUST reject the request with `invalid_scope`.
-
-For ordinary OAuth scopes, the applicable authorization policy MUST be explicit
-and pre-established for the authenticated client, the bound
-`saml_sp_entity_id`, and the resolved target service set. Such policy MAY
-result from static configuration, administrative consent, or a previously
-recorded authorization grant at the same authorization server, but it MUST NOT
-be inferred solely from the SAML assertion contents or from mapped identity
-claims. SAML attribute values MAY serve as inputs to scope grant evaluation
-when a pre-established policy rule explicitly conditions a scope grant on a
-specific attribute value or attribute combination; however, the policy rule
-itself MUST exist independently of the assertion and MUST NOT be created or
-expanded ad hoc based on the assertion's contents.
+For any request that includes `scope`, the authorization server MUST apply the
+authorization and consent rules in Section 3.1. If no applicable grant policy
+exists for a requested scope, the authorization server MUST reject the request
+with `invalid_scope`.
 
 When issuing a refresh token, the authorization server MUST ensure that the
 issued refresh token preserves the subject continuity established by the SAML
@@ -1193,8 +1186,8 @@ additional members.
 
 ## Successful Response
 
-For an active SAML assertion, the authorization server returns an introspection
-response as defined by {{RFC7662}} with:
+For an active SAML assertion, the authorization server MUST return an
+introspection response as defined by {{RFC7662}} with:
 
 * `active` set to `true`;
 * `claims` set to a JSON object containing the normalized claims derived from
@@ -1218,15 +1211,12 @@ The `claims` object:
 The authorization server SHOULD return only the minimum normalized claims
 necessary for the authorized client and applicable relying-party policy.
 
-The `saml` object is intended for clients that need the authorization server to
-perform XML parsing and XML signature validation, but still need protocol values
-from the validated SAML input to complete local SAML SP processing. These values
-are protocol metadata, not end-user identity claims. They MUST NOT be returned
-inside the `claims` object.
+The `saml` object contains protocol metadata, not end-user identity claims. The
+authorization server MUST NOT return those values inside the `claims` object.
 
 When the `saml` object is returned:
 
-* every member value MUST be derived from the SAML input that was successfully
+* every member value MUST be derived from SAML input that was successfully
   validated under Section 6;
 * values from a SAML `Response` wrapper MUST be included only when a signed
   SAML `Response` wrapper was submitted and accepted under Section 6.2;
@@ -1238,7 +1228,11 @@ When the `saml` object is returned:
 * the authorization server MUST omit any member for which it has no validated or
   extracted value.
 
-The `saml` object MAY contain the following members:
+The `saml` object is intended for clients that need the authorization server to
+perform XML parsing and XML signature validation, but still need protocol values
+from the validated SAML input to complete local SAML SP processing.
+
+The `saml` object MAY contain these members:
 
 `input_type`:
 : String. Either `assertion` or `response`, indicating whether the submitted
@@ -1252,7 +1246,7 @@ The `saml` object MAY contain the following members:
 `assertion`:
 : JSON object containing values from the effective SAML `Assertion`.
 
-When present, the `response` object MAY contain the following members:
+When present, the `response` object MAY contain these members:
 
 `id`:
 : String. The value of `Response/@ID`.
@@ -1279,7 +1273,7 @@ When present, the `response` object MAY contain the following members:
   have this value set to `false` because Section 6.2 requires the authorization
   server to reject a Response wrapper that contains a nested status code.
 
-When present, the `assertion` object MAY contain the following members:
+When present, the `assertion` object MAY contain these members:
 
 `id`:
 : String. The value of `Assertion/@ID`.
