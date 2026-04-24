@@ -559,9 +559,9 @@ always one SAML `Assertion`. The submitted SAML input MUST therefore be either:
 
 If a signed SAML `Response` is submitted, the authorization server:
 
-* MAY use the response signature to establish integrity and issuer authenticity
-  for the enclosed `Assertion` when that `Assertion` is not independently
-  signed;
+* MAY use the response signature to establish integrity and SAML Response Issuer
+  authenticity for the enclosed `Assertion` when that `Assertion` is not
+  independently signed;
 * MUST NOT treat successful validation of a SAML `Response` signature as proof
   that response-level fields such as `Destination`, `Consent`, or
   `Response/@InResponseTo` have been validated;
@@ -590,18 +590,33 @@ content inside an otherwise accepted assertion, including `EncryptedID`,
 SAML input under this profile MUST reject any effective assertion containing
 such elements.
 
-## Issuer Boundary {#issuer-binding}
+## SAML and OAuth Issuer Boundary {#issuer-binding}
 
-The SAML assertion issuer and the OAuth issuer identify related but distinct
-protocol issuers. The authorization server MUST validate the SAML assertion
-`Issuer` against the `saml_idp_entity_id` value bound to the OAuth issuer. The
-`iss` claim in an ID Token issued under this profile MUST be the OAuth issuer,
-not the SAML assertion issuer.
+This profile uses distinct issuer identifiers from different protocol contexts:
 
-The SAML assertion issuer MUST NOT be copied into the ID Token `iss` claim or
-used as a substitute for OAuth issuer metadata.
+* SAML Response Issuer: the value of the SAML `Response/Issuer` element, when a
+  SAML `Response` wrapper is submitted;
+* SAML Assertion Issuer: the value of the effective SAML `Assertion/Issuer`
+  element;
+* Trusted SAML IdP Entity ID: the `saml_idp_entity_id` value bound to the OAuth
+  issuer identifier; and
+* OAuth issuer identifier: the authorization server issuer value used in OAuth
+  authorization server metadata and as the OpenID Connect ID Token `iss` claim.
 
-## Signature, Issuer, and Audience Binding {#signature-issuer-audience-binding}
+The SAML Assertion Issuer MUST match the Trusted SAML IdP Entity ID. When a SAML
+`Response` wrapper is submitted, the SAML Response Issuer MUST also match the
+Trusted SAML IdP Entity ID.
+
+The OAuth issuer identifier and the Trusted SAML IdP Entity ID identify related
+but distinct protocol issuers. The `iss` claim in an ID Token issued under this
+profile MUST be the OAuth issuer identifier, not the SAML Assertion Issuer or
+SAML Response Issuer.
+
+The authorization server MUST NOT copy a SAML issuer value into the ID Token
+`iss` claim or use a SAML issuer value as a substitute for OAuth issuer
+metadata.
+
+## Signature, SAML Issuer, and Audience Binding {#signature-issuer-audience-binding}
 
 The authorization server MUST:
 
@@ -615,16 +630,17 @@ The authorization server MUST:
 2. validate the signed SAML element or elements using SAML metadata and SAML
    key material, not JOSE metadata;
 3. if the submitted SAML input is a `Response`, verify that:
-   * the `Response` issuer matches the trusted SAML IdP Entity ID bound to the
-     OAuth issuer as defined in {{issuer-binding}};
+   * the SAML `Response/Issuer` value matches the Trusted SAML IdP Entity ID
+     defined in {{issuer-binding}};
    * the top-level `Response/Status/StatusCode/@Value` is
      `urn:oasis:names:tc:SAML:2.0:status:Success`; and
    * no nested `Response/Status/StatusCode/StatusCode` element is present;
 4. validate the effective `Assertion` according to SAML 2.0 processing rules,
-   including issuer, time validity (enforcing both `Conditions/@NotBefore` and
-   `Conditions/@NotOnOrAfter`), conditions, and subject confirmation;
-5. verify that the effective `Assertion` issuer matches the trusted SAML IdP
-   Entity ID bound to the OAuth issuer as defined in {{issuer-binding}};
+   including `Assertion/Issuer`, time validity (enforcing both
+   `Conditions/@NotBefore` and `Conditions/@NotOnOrAfter`), conditions, and
+   subject confirmation;
+5. verify that the effective SAML `Assertion/Issuer` value matches the Trusted
+   SAML IdP Entity ID defined in {{issuer-binding}};
 6. verify that the effective `Assertion` contains at least one
    `AudienceRestriction` element;
 7. verify that the bound `saml_sp_entity_id` appears as an `Audience` value
@@ -670,9 +686,9 @@ bearer confirmation is sufficient. For a usable bearer `SubjectConfirmationData`
 The authorization server MUST enforce any applicable SAML one-time-use,
 replay-prevention, and assertion freshness requirements associated with the
 trusted SAML deployment. At minimum, it MUST detect reuse of the same trusted
-assertion identifier from the same issuer until the assertion's validity window
-or local freshness window has expired. Whether reuse within that window is
-accepted, rejected, or further constrained by the authenticated client and
+assertion identifier from the same SAML Assertion Issuer until the assertion's
+validity window or local freshness window has expired. Whether reuse within that
+window is accepted, rejected, or further constrained by the authenticated client and
 bound `saml_sp_entity_id` is a deployment policy decision under this profile,
 except where a stricter rule is stated below. The authorization server MUST
 also enforce any applicable SAML proxying restrictions.
