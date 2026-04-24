@@ -628,12 +628,13 @@ Table of Contents
    extracts the enclosed assertion and treats it as the effective
    assertion.
 
-   This profile is limited to signed, unencrypted SAML 2.0 bearer
-   assertions, presented either directly as a signed Assertion or inside
-   a signed SAML Response containing exactly one bearer Assertion.
-   Encrypted assertions are out of scope.  SAML protocol messages other
-   than Response, and assertions that rely on subject confirmation
-   methods other than bearer, are also out of scope.
+   This profile is limited to signed SAML input containing exactly one
+   unencrypted SAML 2.0 bearer assertion.  The SAML input is signed
+   either as a signed Assertion or as a signed SAML Response containing
+   exactly one bearer Assertion.  Encrypted assertions are out of scope.
+   SAML protocol messages other than Response, and assertions that rely
+   on subject confirmation methods other than bearer, are also out of
+   scope.
 
    This profile uses an assertion-centric processing model: the
    effective token is always one SAML Assertion.  The submitted SAML
@@ -766,11 +767,12 @@ Table of Contents
        audience, and the bound saml_sp_entity_id do not identify the
        same relying-party migration context.
 
-   For Token Exchange, the authorization server MUST reject with
-   invalid_request any encrypted assertion, any submitted SAML input
-   that is neither an Assertion nor a Response as defined by this
-   profile, or any assertion using a subject confirmation method outside
-   this profile.
+   An authorization server consuming SAML input under this profile MUST
+   reject any encrypted assertion, any submitted SAML input that is
+   neither an Assertion nor a Response as defined by this profile, or
+   any assertion using a subject confirmation method outside this
+   profile.  Endpoint-specific error behavior is defined by Section 7.3
+   and Section 8.3.
 
 6.6.  Bearer Subject Confirmation
 
@@ -993,12 +995,11 @@ Table of Contents
    |                            |         |An absent scope |semantics.   |
    |                            |         |parameter MUST  |Clients      |
    |                            |         |be treated as a |SHOULD NOT   |
-   |                            |         |missing         |send them;   |
-   |                            |         |offline_access  |authorization|
-   |                            |         |value and       |servers      |
-   |                            |         |rejected with   |SHOULD ignore|
-   |                            |         |invalid_request.|them if      |
-   |                            |         |                |present.     |
+   |                            |         |missing         |send them.   |
+   |                            |         |offline_access  |             |
+   |                            |         |value and       |             |
+   |                            |         |rejected with   |             |
+   |                            |         |invalid_request.|             |
    +----------------------------+---------+----------------+-------------+
    |urn:ietf:params:oauth:token-|ID Token |scope MUST be   |This profile |
    |type:id_token               |         |present and MUST|defines no   |
@@ -1007,12 +1008,7 @@ Table of Contents
    |                            |         |                |semantics.   |
    |                            |         |                |Clients      |
    |                            |         |                |SHOULD NOT   |
-   |                            |         |                |send them;   |
-   |                            |         |                |authorization|
-   |                            |         |                |servers      |
-   |                            |         |                |SHOULD ignore|
-   |                            |         |                |them if      |
-   |                            |         |                |present.     |
+   |                            |         |                |send them.   |
    +----------------------------+---------+----------------+-------------+
    |urn:ietf:params:oauth:token-|Access   |scope is        |The client   |
    |type:access_token           |token    |OPTIONAL.  The  |MAY send     |
@@ -1033,31 +1029,8 @@ Table of Contents
 
                                   Table 3
 
-   For an access token request that includes openid, the target-
-   selection rules are:
-
-   *  the authorization server MUST be an OpenID Provider and MUST
-      publish a userinfo_endpoint in accordance with OpenID Connect
-      Discovery [OIDC-DISCOVERY];
-
-   *  if both resource and audience are omitted, the effective target
-      service set defaults to the OpenID Provider's UserInfo endpoint;
-
-   *  if resource and/or audience are present, the explicitly requested
-      targets define the requested target service set and the
-      authorization server MAY additionally include the UserInfo
-      endpoint in that set; and
-
-   *  if the authorization server does not include the UserInfo endpoint
-      in the resolved target service set, it MUST either omit openid
-      from the granted scope or reject the request with invalid_target
-      or invalid_scope according to local policy.
-
-   For an access token request that does not include openid, and where
-   both resource and audience are omitted, the authorization server MAY
-   use a preconfigured default target service set for the authenticated
-   client and the bound saml_sp_entity_id, or it MAY reject the request
-   with invalid_target.
+   Target-selection processing for access token requests is defined in
+   Section 7.2.1.
 
    scope:
 
@@ -1155,6 +1128,38 @@ Table of Contents
    set for an access token request, or if the request asks for multiple
    target services that policy does not allow to share a single token,
    it MUST reject the request with invalid_target.
+
+   When requested_token_type is urn:ietf:params:oauth:token-
+   type:refresh_token or urn:ietf:params:oauth:token-type:id_token, the
+   authorization server SHOULD ignore resource and audience if present.
+
+   When requested_token_type is urn:ietf:params:oauth:token-
+   type:access_token and the requested scope includes openid, the
+   authorization server:
+
+   *  MUST be an OpenID Provider;
+
+   *  MUST publish a userinfo_endpoint in accordance with OpenID Connect
+      Discovery [OIDC-DISCOVERY];
+
+   *  MUST resolve the UserInfo endpoint as part of the target service
+      set when both resource and audience are omitted;
+
+   *  MAY include the UserInfo endpoint in the target service set when
+      explicit resource and/or audience values are present and policy
+      allows a single token to cover both the UserInfo endpoint and
+      those targets; and
+
+   *  MUST either omit openid from the granted scope or reject the
+      request with invalid_target or invalid_scope if the resolved
+      target service set does not include the UserInfo endpoint.
+
+   When requested_token_type is urn:ietf:params:oauth:token-
+   type:access_token, the requested scope does not include openid, and
+   both resource and audience are omitted, the authorization server MAY
+   use a preconfigured default target service set for the authenticated
+   client and bound saml_sp_entity_id, or it MAY reject the request with
+   invalid_target.
 
    For any request that includes scope, the authorization server MUST
    apply the authorization and consent rules in Section 3.1.  If no
@@ -1500,7 +1505,7 @@ Table of Contents
       derived from the SAML assertion for this client; and
 
    *  saml, when returned, set to a JSON object containing normalized
-      SAML validation metadata as defined below.
+      SAML protocol metadata as defined below.
 
    The claims member is intentionally nested rather than returned at the
    top level of the introspection response.  This separates the token-
@@ -1564,18 +1569,20 @@ Table of Contents
 
    When present, the response object MAY contain these members:
 
-   id:  String.  The value of Response/@ID.
+   id:  String.  The extracted value of Response/@ID.
 
-   issuer:  String.  The value of the Response/Issuer element.
+   issuer:  String.  The extracted value of the Response/Issuer element.
 
-   issue_instant:  String.  The value of Response/@IssueInstant.
+   issue_instant:  String.  The extracted value of
+      Response/@IssueInstant.
 
-   destination:  String.  The value of Response/@Destination.
+   destination:  String.  The extracted value of Response/@Destination.
 
-   in_response_to:  String.  The value of Response/@InResponseTo.
+   in_response_to:  String.  The extracted value of
+      Response/@InResponseTo.
 
-   status_code:  String.  The value of the top-level Response/Status/
-      StatusCode/@Value.
+   status_code:  String.  The validated value of the top-level
+      Response/Status/StatusCode/@Value.
 
    has_nested_status_code:  Boolean. true if a nested
       Response/Status/StatusCode/StatusCode element was present in the
@@ -2404,7 +2411,7 @@ Table of Contents
 
 14.4.  OAuth Token Introspection Response Registry
 
-   This document requests registration of the following value in the
+   This document requests registration of the following values in the
    OAuth Token Introspection Response registry established by [RFC7662]:
 
    *  Response Name: claims

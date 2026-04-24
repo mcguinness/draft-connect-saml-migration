@@ -1982,11 +1982,12 @@ a base64url-encoded SAML 2.0 assertion, as in <span>[<a href="#RFC8693" class="c
 <code>Response</code> wrapper containing exactly one bearer assertion. When a <code>Response</code>
 wrapper is submitted, the authorization server extracts the enclosed assertion
 and treats it as the effective assertion.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
-<p id="section-6.1-2">This profile is limited to signed, unencrypted SAML 2.0 bearer assertions,
-presented either directly as a signed <code>Assertion</code> or inside a signed SAML
-<code>Response</code> containing exactly one bearer <code>Assertion</code>. Encrypted assertions are
-out of scope. SAML protocol messages other than <code>Response</code>, and assertions that
-rely on subject confirmation methods other than bearer, are also out of scope.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.1-2">This profile is limited to signed SAML input containing exactly one unencrypted
+SAML 2.0 bearer assertion. The SAML input is signed either as a signed
+<code>Assertion</code> or as a signed SAML <code>Response</code> containing exactly one bearer
+<code>Assertion</code>. Encrypted assertions are out of scope. SAML protocol messages other
+than <code>Response</code>, and assertions that rely on subject confirmation methods other
+than bearer, are also out of scope.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
 <p id="section-6.1-3">This profile uses an assertion-centric processing model: the effective token is
 always one SAML <code>Assertion</code>. The submitted SAML input <span class="bcp14">MUST</span> therefore be either:<a href="#section-6.1-3" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -2160,10 +2161,11 @@ bound <code>saml_sp_entity_id</code> do not identify the same relying-party migr
 context.<a href="#section-6.5-2.8.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
-<p id="section-6.5-3">For Token Exchange, the authorization server <span class="bcp14">MUST</span> reject with <code>invalid_request</code>
-any encrypted assertion, any submitted SAML input that is neither an
-<code>Assertion</code> nor a <code>Response</code> as defined by this profile, or any assertion using
-a subject confirmation method outside this profile.<a href="#section-6.5-3" class="pilcrow">¶</a></p>
+<p id="section-6.5-3">An authorization server consuming SAML input under this profile <span class="bcp14">MUST</span> reject any
+encrypted assertion, any submitted SAML input that is neither an <code>Assertion</code> nor
+a <code>Response</code> as defined by this profile, or any assertion using a subject
+confirmation method outside this profile. Endpoint-specific error behavior is
+defined by <a href="#token-exchange-error-response" class="auto internal xref">Section 7.3</a> and <a href="#introspection-error-response" class="auto internal xref">Section 8.3</a>.<a href="#section-6.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="bearer-subject-confirmation">
@@ -2432,7 +2434,7 @@ protocol level. This profile narrows that rule: an omitted
               <td class="text-left" rowspan="1" colspan="1">Refresh token</td>
               <td class="text-left" rowspan="1" colspan="1">
                 <code>scope</code> <span class="bcp14">MUST</span> be present and <span class="bcp14">MUST</span> include <code>offline_access</code>. An absent <code>scope</code> parameter <span class="bcp14">MUST</span> be treated as a missing <code>offline_access</code> value and rejected with <code>invalid_request</code>.</td>
-              <td class="text-left" rowspan="1" colspan="1">This profile defines no <code>resource</code> or <code>audience</code> semantics. Clients <span class="bcp14">SHOULD NOT</span> send them; authorization servers <span class="bcp14">SHOULD</span> ignore them if present.</td>
+              <td class="text-left" rowspan="1" colspan="1">This profile defines no <code>resource</code> or <code>audience</code> semantics. Clients <span class="bcp14">SHOULD NOT</span> send them.</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">
@@ -2441,7 +2443,7 @@ protocol level. This profile narrows that rule: an omitted
               <td class="text-left" rowspan="1" colspan="1">ID Token</td>
               <td class="text-left" rowspan="1" colspan="1">
                 <code>scope</code> <span class="bcp14">MUST</span> be present and <span class="bcp14">MUST</span> include <code>openid</code>.</td>
-              <td class="text-left" rowspan="1" colspan="1">This profile defines no <code>resource</code> or <code>audience</code> semantics. Clients <span class="bcp14">SHOULD NOT</span> send them; authorization servers <span class="bcp14">SHOULD</span> ignore them if present.</td>
+              <td class="text-left" rowspan="1" colspan="1">This profile defines no <code>resource</code> or <code>audience</code> semantics. Clients <span class="bcp14">SHOULD NOT</span> send them.</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">
@@ -2454,59 +2456,33 @@ protocol level. This profile narrows that rule: an omitted
             </tr>
           </tbody>
         </table>
-<p id="section-7.1-17">For an access token request that includes <code>openid</code>, the target-selection rules
-are:<a href="#section-7.1-17" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-7.1-18.1">
-            <p id="section-7.1-18.1.1">the authorization server <span class="bcp14">MUST</span> be an OpenID Provider and <span class="bcp14">MUST</span> publish a
-<code>userinfo_endpoint</code> in accordance with OpenID Connect Discovery
-<span>[<a href="#OIDC-DISCOVERY" class="cite xref">OIDC-DISCOVERY</a>]</span>;<a href="#section-7.1-18.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-7.1-18.2">
-            <p id="section-7.1-18.2.1">if both <code>resource</code> and <code>audience</code> are omitted, the effective target service set
-defaults to the OpenID Provider's UserInfo endpoint;<a href="#section-7.1-18.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-7.1-18.3">
-            <p id="section-7.1-18.3.1">if <code>resource</code> and/or <code>audience</code> are present, the explicitly requested targets
-define the requested target service set and the authorization server <span class="bcp14">MAY</span>
-additionally include the UserInfo endpoint in that set; and<a href="#section-7.1-18.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-7.1-18.4">
-            <p id="section-7.1-18.4.1">if the authorization server does not include the UserInfo endpoint in the
-resolved target service set, it <span class="bcp14">MUST</span> either omit <code>openid</code> from the granted
-scope or reject the request with <code>invalid_target</code> or <code>invalid_scope</code> according
-to local policy.<a href="#section-7.1-18.4.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="section-7.1-19">For an access token request that does not include <code>openid</code>, and where both
-<code>resource</code> and <code>audience</code> are omitted, the authorization server <span class="bcp14">MAY</span> use a
-preconfigured default target service set for the authenticated client and the
-bound <code>saml_sp_entity_id</code>, or it <span class="bcp14">MAY</span> reject the request with <code>invalid_target</code>.<a href="#section-7.1-19" class="pilcrow">¶</a></p>
-<p id="section-7.1-20"><code>scope</code>:<a href="#section-7.1-20" class="pilcrow">¶</a></p>
-<p id="section-7.1-21">Conditional. The <code>scope</code> requirement depends on <code>requested_token_type</code>, as
+<p id="section-7.1-17">Target-selection processing for access token requests is defined in
+<a href="#token-exchange-common-processing" class="auto internal xref">Section 7.2.1</a>.<a href="#section-7.1-17" class="pilcrow">¶</a></p>
+<p id="section-7.1-18"><code>scope</code>:<a href="#section-7.1-18" class="pilcrow">¶</a></p>
+<p id="section-7.1-19">Conditional. The <code>scope</code> requirement depends on <code>requested_token_type</code>, as
 defined above. This profile permits ordinary OAuth scope values in addition to
-OpenID Connect scopes.<a href="#section-7.1-21" class="pilcrow">¶</a></p>
-<p id="section-7.1-22">This profile does not define a token-endpoint parameter for fine-grained claim
+OpenID Connect scopes.<a href="#section-7.1-19" class="pilcrow">¶</a></p>
+<p id="section-7.1-20">This profile does not define a token-endpoint parameter for fine-grained claim
 selection. Claims included in a directly issued ID Token, and claims later made
 available through UserInfo, are determined by the granted scope, the rules in
 <a href="#claim-mapping" class="auto internal xref">Section 11</a>, and the claim release policy for the relying-party relationship
-represented by the bound <code>saml_sp_entity_id</code>.<a href="#section-7.1-22" class="pilcrow">¶</a></p>
-<p id="section-7.1-23"><code>resource</code>:<a href="#section-7.1-23" class="pilcrow">¶</a></p>
-<p id="section-7.1-24"><span class="bcp14">OPTIONAL</span>. For access token requests, one or more resource indicators as defined
+represented by the bound <code>saml_sp_entity_id</code>.<a href="#section-7.1-20" class="pilcrow">¶</a></p>
+<p id="section-7.1-21"><code>resource</code>:<a href="#section-7.1-21" class="pilcrow">¶</a></p>
+<p id="section-7.1-22"><span class="bcp14">OPTIONAL</span>. For access token requests, one or more resource indicators as defined
 by <span>[<a href="#RFC8707" class="cite xref">RFC8707</a>]</span>. Clients requesting an access token under this profile <span class="bcp14">SHOULD</span>
-send a single <code>resource</code> value when a resource URI is known.<a href="#section-7.1-24" class="pilcrow">¶</a></p>
-<p id="section-7.1-25"><code>audience</code>:<a href="#section-7.1-25" class="pilcrow">¶</a></p>
-<p id="section-7.1-26"><span class="bcp14">OPTIONAL</span>. For access token requests, one or more logical target service
-identifiers as defined by <span>[<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>.<a href="#section-7.1-26" class="pilcrow">¶</a></p>
-<p id="section-7.1-27">The target-selection rules for <code>resource</code> and <code>audience</code> depend on
-<code>requested_token_type</code>, as defined above.<a href="#section-7.1-27" class="pilcrow">¶</a></p>
-<p id="section-7.1-28">This profile does not define the use of <code>actor_token</code>, <code>actor_token_type</code>, or
+send a single <code>resource</code> value when a resource URI is known.<a href="#section-7.1-22" class="pilcrow">¶</a></p>
+<p id="section-7.1-23"><code>audience</code>:<a href="#section-7.1-23" class="pilcrow">¶</a></p>
+<p id="section-7.1-24"><span class="bcp14">OPTIONAL</span>. For access token requests, one or more logical target service
+identifiers as defined by <span>[<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>.<a href="#section-7.1-24" class="pilcrow">¶</a></p>
+<p id="section-7.1-25">The target-selection rules for <code>resource</code> and <code>audience</code> depend on
+<code>requested_token_type</code>, as defined above.<a href="#section-7.1-25" class="pilcrow">¶</a></p>
+<p id="section-7.1-26">This profile does not define the use of <code>actor_token</code>, <code>actor_token_type</code>, or
 <code>authorization_details</code> in this Token Exchange request. Deployments <span class="bcp14">MAY</span> support
-them by separate agreement, but they are outside this profile.<a href="#section-7.1-28" class="pilcrow">¶</a></p>
-<p id="section-7.1-29">Only confidential clients can use this profile. Client authentication at the
+them by separate agreement, but they are outside this profile.<a href="#section-7.1-26" class="pilcrow">¶</a></p>
+<p id="section-7.1-27">Only confidential clients can use this profile. Client authentication at the
 token endpoint uses the client's registered OAuth 2.0 client authentication
 method. The authenticated client <span class="bcp14">MUST</span> be a confidential client authorized for
-the <code>saml_sp_entity_id</code> that matches the SAML assertion audience.<a href="#section-7.1-29" class="pilcrow">¶</a></p>
+the <code>saml_sp_entity_id</code> that matches the SAML assertion audience.<a href="#section-7.1-27" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="token-exchange-as-processing">
@@ -2572,14 +2548,51 @@ Local Account, more than one candidate Local Account, or a Local Account that
 is disabled, suspended, deprovisioned, or otherwise not permitted to
 authenticate.<a href="#section-7.2.1-5" class="pilcrow">¶</a></p>
 <p id="section-7.2.1-6">The authorization server <span class="bcp14">MUST</span> enforce the token-type-specific scope and target
-selection requirements defined in <a href="#token-exchange-request" class="auto internal xref">Section 7.1</a>. If the authorization server
-cannot determine an acceptable target service set for an access token request,
-or if the request asks for multiple target services that policy does not allow
-to share a single token, it <span class="bcp14">MUST</span> reject the request with <code>invalid_target</code>.<a href="#section-7.2.1-6" class="pilcrow">¶</a></p>
-<p id="section-7.2.1-7">For any request that includes <code>scope</code>, the authorization server <span class="bcp14">MUST</span> apply the
-authorization and consent rules in <a href="#authorization-consent-model" class="auto internal xref">Section 3.1</a>. If no applicable grant policy
-exists for a requested scope, the authorization server <span class="bcp14">MUST</span> reject the request
-with <code>invalid_scope</code>.<a href="#section-7.2.1-7" class="pilcrow">¶</a></p>
+selection requirements defined in <a href="#token-exchange-request" class="auto internal xref">Section 7.1</a>. If the
+authorization server cannot determine an acceptable target service set for an
+access token request, or if the request asks for multiple target services that
+policy does not allow to share a single token, it <span class="bcp14">MUST</span> reject the request with
+<code>invalid_target</code>.<a href="#section-7.2.1-6" class="pilcrow">¶</a></p>
+<p id="section-7.2.1-7">When <code>requested_token_type</code> is
+<code>urn:ietf:params:oauth:token-type:refresh_token</code> or
+<code>urn:ietf:params:oauth:token-type:id_token</code>, the authorization server <span class="bcp14">SHOULD</span>
+ignore <code>resource</code> and <code>audience</code> if present.<a href="#section-7.2.1-7" class="pilcrow">¶</a></p>
+<p id="section-7.2.1-8">When <code>requested_token_type</code> is
+<code>urn:ietf:params:oauth:token-type:access_token</code> and the requested scope includes
+<code>openid</code>, the authorization server:<a href="#section-7.2.1-8" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.2.1-9.1">
+              <p id="section-7.2.1-9.1.1"><span class="bcp14">MUST</span> be an OpenID Provider;<a href="#section-7.2.1-9.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7.2.1-9.2">
+              <p id="section-7.2.1-9.2.1"><span class="bcp14">MUST</span> publish a <code>userinfo_endpoint</code> in accordance with OpenID Connect Discovery
+<span>[<a href="#OIDC-DISCOVERY" class="cite xref">OIDC-DISCOVERY</a>]</span>;<a href="#section-7.2.1-9.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7.2.1-9.3">
+              <p id="section-7.2.1-9.3.1"><span class="bcp14">MUST</span> resolve the UserInfo endpoint as part of the target service set when both
+<code>resource</code> and <code>audience</code> are omitted;<a href="#section-7.2.1-9.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7.2.1-9.4">
+              <p id="section-7.2.1-9.4.1"><span class="bcp14">MAY</span> include the UserInfo endpoint in the target service set when explicit
+<code>resource</code> and/or <code>audience</code> values are present and policy allows a single
+token to cover both the UserInfo endpoint and those targets; and<a href="#section-7.2.1-9.4.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7.2.1-9.5">
+              <p id="section-7.2.1-9.5.1"><span class="bcp14">MUST</span> either omit <code>openid</code> from the granted scope or reject the request with
+<code>invalid_target</code> or <code>invalid_scope</code> if the resolved target service set does
+not include the UserInfo endpoint.<a href="#section-7.2.1-9.5.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-7.2.1-10">When <code>requested_token_type</code> is
+<code>urn:ietf:params:oauth:token-type:access_token</code>, the requested scope does not
+include <code>openid</code>, and both <code>resource</code> and <code>audience</code> are omitted, the
+authorization server <span class="bcp14">MAY</span> use a preconfigured default target service set for the
+authenticated client and bound <code>saml_sp_entity_id</code>, or it <span class="bcp14">MAY</span> reject the request
+with <code>invalid_target</code>.<a href="#section-7.2.1-10" class="pilcrow">¶</a></p>
+<p id="section-7.2.1-11">For any request that includes <code>scope</code>, the authorization server <span class="bcp14">MUST</span> apply the
+authorization and consent rules in <a href="#authorization-consent-model" class="auto internal xref">Section 3.1</a>. If no
+applicable grant policy exists for a requested scope, the authorization server
+<span class="bcp14">MUST</span> reject the request with <code>invalid_scope</code>.<a href="#section-7.2.1-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="token-exchange-successful-response">
@@ -2988,7 +3001,7 @@ the SAML assertion for this client; and<a href="#section-8.2.3-2.2.1" class="pil
 </li>
             <li class="normal" id="section-8.2.3-2.3">
               <p id="section-8.2.3-2.3.1"><code>saml</code>, when returned, set to a JSON object containing normalized SAML
-validation metadata as defined below.<a href="#section-8.2.3-2.3.1" class="pilcrow">¶</a></p>
+protocol metadata as defined below.<a href="#section-8.2.3-2.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-8.2.3-3">The <code>claims</code> member is intentionally nested rather than returned at the top
@@ -3068,37 +3081,38 @@ Assertion.<a href="#section-8.2.3-12.4.1" class="pilcrow">¶</a></p>
             <dt id="section-8.2.3-14.1">
 <code>id</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.3-14.2">
-              <p id="section-8.2.3-14.2.1">String. The value of <code>Response/@ID</code>.<a href="#section-8.2.3-14.2.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-14.2.1">String. The extracted value of <code>Response/@ID</code>.<a href="#section-8.2.3-14.2.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.2.3-14.3">
 <code>issuer</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.3-14.4">
-              <p id="section-8.2.3-14.4.1">String. The value of the <code>Response/Issuer</code> element.<a href="#section-8.2.3-14.4.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-14.4.1">String. The extracted value of the <code>Response/Issuer</code> element.<a href="#section-8.2.3-14.4.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.2.3-14.5">
 <code>issue_instant</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.3-14.6">
-              <p id="section-8.2.3-14.6.1">String. The value of <code>Response/@IssueInstant</code>.<a href="#section-8.2.3-14.6.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-14.6.1">String. The extracted value of <code>Response/@IssueInstant</code>.<a href="#section-8.2.3-14.6.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.2.3-14.7">
 <code>destination</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.3-14.8">
-              <p id="section-8.2.3-14.8.1">String. The value of <code>Response/@Destination</code>.<a href="#section-8.2.3-14.8.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-14.8.1">String. The extracted value of <code>Response/@Destination</code>.<a href="#section-8.2.3-14.8.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.2.3-14.9">
 <code>in_response_to</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.3-14.10">
-              <p id="section-8.2.3-14.10.1">String. The value of <code>Response/@InResponseTo</code>.<a href="#section-8.2.3-14.10.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-14.10.1">String. The extracted value of <code>Response/@InResponseTo</code>.<a href="#section-8.2.3-14.10.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.2.3-14.11">
 <code>status_code</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.3-14.12">
-              <p id="section-8.2.3-14.12.1">String. The value of the top-level <code>Response/Status/StatusCode/@Value</code>.<a href="#section-8.2.3-14.12.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-14.12.1">String. The validated value of the top-level
+<code>Response/Status/StatusCode/@Value</code>.<a href="#section-8.2.3-14.12.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.2.3-14.13">
@@ -3107,8 +3121,9 @@ Assertion.<a href="#section-8.2.3-12.4.1" class="pilcrow">¶</a></p>
               <p id="section-8.2.3-14.14.1">Boolean. <code>true</code> if a nested <code>Response/Status/StatusCode/StatusCode</code> element
 was present in the submitted Response, and <code>false</code> otherwise. Under this
 profile, an active response that includes a <code>response</code> object will normally
-have this value set to <code>false</code> because <a href="#response-wrapper-processing" class="auto internal xref">Section 6.2</a> requires the authorization
-server to reject a Response wrapper that contains a nested status code.<a href="#section-8.2.3-14.14.1" class="pilcrow">¶</a></p>
+have this value set to <code>false</code> because <a href="#response-wrapper-processing" class="auto internal xref">Section 6.2</a>
+requires the authorization server to reject a Response wrapper that contains a
+nested status code.<a href="#section-8.2.3-14.14.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -4041,7 +4056,7 @@ endpoints, which use a separate registry.<a href="#section-14.3-1" class="pilcro
         <h3 id="name-oauth-token-introspection-r">
 <a href="#section-14.4" class="section-number selfRef">14.4. </a><a href="#name-oauth-token-introspection-r" class="section-name selfRef">OAuth Token Introspection Response Registry</a>
         </h3>
-<p id="section-14.4-1">This document requests registration of the following value in the OAuth Token
+<p id="section-14.4-1">This document requests registration of the following values in the OAuth Token
 Introspection Response registry established by <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>:<a href="#section-14.4-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-14.4-2.1">
