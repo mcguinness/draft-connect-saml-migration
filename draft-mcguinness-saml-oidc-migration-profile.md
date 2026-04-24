@@ -542,11 +542,12 @@ a base64url-encoded SAML 2.0 assertion, as in {{RFC8693}}, or a signed SAML
 wrapper is submitted, the authorization server extracts the enclosed assertion
 and treats it as the effective assertion.
 
-This profile is limited to signed, unencrypted SAML 2.0 bearer assertions,
-presented either directly as a signed `Assertion` or inside a signed SAML
-`Response` containing exactly one bearer `Assertion`. Encrypted assertions are
-out of scope. SAML protocol messages other than `Response`, and assertions that
-rely on subject confirmation methods other than bearer, are also out of scope.
+This profile is limited to signed SAML input containing exactly one unencrypted
+SAML 2.0 bearer assertion. The SAML input is signed either as a signed
+`Assertion` or as a signed SAML `Response` containing exactly one bearer
+`Assertion`. Encrypted assertions are out of scope. SAML protocol messages other
+than `Response`, and assertions that rely on subject confirmation methods other
+than bearer, are also out of scope.
 
 This profile uses an assertion-centric processing model: the effective token is
 always one SAML `Assertion`. The submitted SAML input MUST therefore be either:
@@ -652,10 +653,11 @@ The authorization server MUST:
    bound `saml_sp_entity_id` do not identify the same relying-party migration
    context.
 
-For Token Exchange, the authorization server MUST reject with `invalid_request`
-any encrypted assertion, any submitted SAML input that is neither an
-`Assertion` nor a `Response` as defined by this profile, or any assertion using
-a subject confirmation method outside this profile.
+An authorization server consuming SAML input under this profile MUST reject any
+encrypted assertion, any submitted SAML input that is neither an `Assertion` nor
+a `Response` as defined by this profile, or any assertion using a subject
+confirmation method outside this profile. Endpoint-specific error behavior is
+defined by {{token-exchange-error-response}} and {{introspection-error-response}}.
 
 ## Bearer Subject Confirmation {#bearer-subject-confirmation}
 
@@ -818,30 +820,12 @@ protocol level. This profile narrows that rule: an omitted
 
 | requested_token_type value | Requested token | scope requirement | Target-selection requirement |
 |---|---|---|---|
-| `urn:ietf:params:oauth:token-type:refresh_token` | Refresh token | `scope` MUST be present and MUST include `offline_access`. An absent `scope` parameter MUST be treated as a missing `offline_access` value and rejected with `invalid_request`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them; authorization servers SHOULD ignore them if present. |
-| `urn:ietf:params:oauth:token-type:id_token` | ID Token | `scope` MUST be present and MUST include `openid`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them; authorization servers SHOULD ignore them if present. |
+| `urn:ietf:params:oauth:token-type:refresh_token` | Refresh token | `scope` MUST be present and MUST include `offline_access`. An absent `scope` parameter MUST be treated as a missing `offline_access` value and rejected with `invalid_request`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them. |
+| `urn:ietf:params:oauth:token-type:id_token` | ID Token | `scope` MUST be present and MUST include `openid`. | This profile defines no `resource` or `audience` semantics. Clients SHOULD NOT send them. |
 | `urn:ietf:params:oauth:token-type:access_token` | Access token | `scope` is OPTIONAL. The request MAY omit `scope` entirely or contain only OAuth scope values without `openid`. | The client MAY send `resource`, `audience`, or both. When both are present, they MUST identify a consistent target service set as understood by the authorization server. |
 
-For an access token request that includes `openid`, the target-selection rules
-are:
-
-* the authorization server MUST be an OpenID Provider and MUST publish a
-  `userinfo_endpoint` in accordance with OpenID Connect Discovery
-  {{OIDC-DISCOVERY}};
-* if both `resource` and `audience` are omitted, the effective target service set
-  defaults to the OpenID Provider's UserInfo endpoint;
-* if `resource` and/or `audience` are present, the explicitly requested targets
-  define the requested target service set and the authorization server MAY
-  additionally include the UserInfo endpoint in that set; and
-* if the authorization server does not include the UserInfo endpoint in the
-  resolved target service set, it MUST either omit `openid` from the granted
-  scope or reject the request with `invalid_target` or `invalid_scope` according
-  to local policy.
-
-For an access token request that does not include `openid`, and where both
-`resource` and `audience` are omitted, the authorization server MAY use a
-preconfigured default target service set for the authenticated client and the
-bound `saml_sp_entity_id`, or it MAY reject the request with `invalid_target`.
+Target-selection processing for access token requests is defined in
+{{token-exchange-common-processing}}.
 
 `scope`:
 
@@ -920,15 +904,44 @@ is disabled, suspended, deprovisioned, or otherwise not permitted to
 authenticate.
 
 The authorization server MUST enforce the token-type-specific scope and target
-selection requirements defined in {{token-exchange-request}}. If the authorization server
-cannot determine an acceptable target service set for an access token request,
-or if the request asks for multiple target services that policy does not allow
-to share a single token, it MUST reject the request with `invalid_target`.
+selection requirements defined in {{token-exchange-request}}. If the
+authorization server cannot determine an acceptable target service set for an
+access token request, or if the request asks for multiple target services that
+policy does not allow to share a single token, it MUST reject the request with
+`invalid_target`.
+
+When `requested_token_type` is
+`urn:ietf:params:oauth:token-type:refresh_token` or
+`urn:ietf:params:oauth:token-type:id_token`, the authorization server SHOULD
+ignore `resource` and `audience` if present.
+
+When `requested_token_type` is
+`urn:ietf:params:oauth:token-type:access_token` and the requested scope includes
+`openid`, the authorization server:
+
+* MUST be an OpenID Provider;
+* MUST publish a `userinfo_endpoint` in accordance with OpenID Connect Discovery
+  {{OIDC-DISCOVERY}};
+* MUST resolve the UserInfo endpoint as part of the target service set when both
+  `resource` and `audience` are omitted;
+* MAY include the UserInfo endpoint in the target service set when explicit
+  `resource` and/or `audience` values are present and policy allows a single
+  token to cover both the UserInfo endpoint and those targets; and
+* MUST either omit `openid` from the granted scope or reject the request with
+  `invalid_target` or `invalid_scope` if the resolved target service set does
+  not include the UserInfo endpoint.
+
+When `requested_token_type` is
+`urn:ietf:params:oauth:token-type:access_token`, the requested scope does not
+include `openid`, and both `resource` and `audience` are omitted, the
+authorization server MAY use a preconfigured default target service set for the
+authenticated client and bound `saml_sp_entity_id`, or it MAY reject the request
+with `invalid_target`.
 
 For any request that includes `scope`, the authorization server MUST apply the
-authorization and consent rules in {{authorization-consent-model}}. If no applicable grant policy
-exists for a requested scope, the authorization server MUST reject the request
-with `invalid_scope`.
+authorization and consent rules in {{authorization-consent-model}}. If no
+applicable grant policy exists for a requested scope, the authorization server
+MUST reject the request with `invalid_scope`.
 
 ### Successful Response {#token-exchange-successful-response}
 
@@ -1215,7 +1228,7 @@ introspection response as defined by {{RFC7662}} with:
 * `claims` set to a JSON object containing the normalized claims derived from
   the SAML assertion for this client; and
 * `saml`, when returned, set to a JSON object containing normalized SAML
-  validation metadata as defined below.
+  protocol metadata as defined below.
 
 The `claims` member is intentionally nested rather than returned at the top
 level of the introspection response. This separates the token-validity metadata
@@ -1272,29 +1285,31 @@ The `saml` object MAY contain these members:
 When present, the `response` object MAY contain these members:
 
 `id`:
-: String. The value of `Response/@ID`.
+: String. The extracted value of `Response/@ID`.
 
 `issuer`:
-: String. The value of the `Response/Issuer` element.
+: String. The extracted value of the `Response/Issuer` element.
 
 `issue_instant`:
-: String. The value of `Response/@IssueInstant`.
+: String. The extracted value of `Response/@IssueInstant`.
 
 `destination`:
-: String. The value of `Response/@Destination`.
+: String. The extracted value of `Response/@Destination`.
 
 `in_response_to`:
-: String. The value of `Response/@InResponseTo`.
+: String. The extracted value of `Response/@InResponseTo`.
 
 `status_code`:
-: String. The value of the top-level `Response/Status/StatusCode/@Value`.
+: String. The validated value of the top-level
+  `Response/Status/StatusCode/@Value`.
 
 `has_nested_status_code`:
 : Boolean. `true` if a nested `Response/Status/StatusCode/StatusCode` element
   was present in the submitted Response, and `false` otherwise. Under this
   profile, an active response that includes a `response` object will normally
-  have this value set to `false` because {{response-wrapper-processing}} requires the authorization
-  server to reject a Response wrapper that contains a nested status code.
+  have this value set to `false` because {{response-wrapper-processing}}
+  requires the authorization server to reject a Response wrapper that contains a
+  nested status code.
 
 When present, the `assertion` object MAY contain these members:
 
@@ -1998,7 +2013,7 @@ endpoints, which use a separate registry.
 
 ## OAuth Token Introspection Response Registry {#iana-introspection-response-registry}
 
-This document requests registration of the following value in the OAuth Token
+This document requests registration of the following values in the OAuth Token
 Introspection Response registry established by {{RFC7662}}:
 
 * Response Name: `claims`
