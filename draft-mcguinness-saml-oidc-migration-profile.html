@@ -4327,7 +4327,17 @@ refresh tokens.<a href="#appendix-A-3" class="pilcrow">¶</a></p>
         <h3 id="name-convert-saml-to-an-id-token">
 <a href="#appendix-A.1" class="section-number selfRef">A.1. </a><a href="#name-convert-saml-to-an-id-token" class="section-name selfRef">Convert SAML to an ID Token</a>
         </h3>
-<div class="lang-http sourcecode" id="appendix-A.1-1">
+<p id="appendix-A.1-1">The calendar application has completed SAML Web SSO and received a signed
+assertion from the IdP for Alice, a user who already has a Local Account at
+the authorization server. The application wants a signed OpenID Connect ID
+Token it can verify locally and use to establish Alice's session — without
+implementing a separate OIDC authorization code flow. It presents the SAML
+assertion to the token endpoint via Token Exchange, requesting an ID Token
+with <code>scope=openid profile email</code>. The authorization server validates the
+assertion, resolves Alice's Local Account, derives her pairwise <code>sub</code>, maps
+her authentication claims, and returns an ID Token directly in the Token
+Exchange response.<a href="#appendix-A.1-1" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="appendix-A.1-2">
 <pre>
 POST /token HTTP/1.1
 Host: login.example.com
@@ -4339,9 +4349,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &amp;scope=openid+profile+email
 &amp;subject_token=PHNhbWwyOkFzc2VydGlvbiB4bWxuczpzYW1sMj0iLi4uIj4uLi48L3NhbWwyOkFzc2VydGlvbj4
 &amp;subject_token_type=urn:ietf:params:oauth:token-type:saml2
-</pre><a href="#appendix-A.1-1" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.1-2" class="pilcrow">¶</a>
 </div>
-<div class="lang-json sourcecode" id="appendix-A.1-2">
+<div class="lang-json sourcecode" id="appendix-A.1-3">
 <pre>
 {
   "issued_token_type": "urn:ietf:params:oauth:token-type:id_token",
@@ -4350,11 +4360,11 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
   "scope": "openid profile email",
   "expires_in": 3600
 }
-</pre><a href="#appendix-A.1-2" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.1-3" class="pilcrow">¶</a>
 </div>
-<p id="appendix-A.1-3">The ID Token carried in the <code>access_token</code> response member might contain claims
-like:<a href="#appendix-A.1-3" class="pilcrow">¶</a></p>
-<div class="lang-json sourcecode" id="appendix-A.1-4">
+<p id="appendix-A.1-4">The ID Token carried in the <code>access_token</code> response member might contain claims
+like:<a href="#appendix-A.1-4" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="appendix-A.1-5">
 <pre>
 {
   "iss": "https://login.example.com",
@@ -4369,7 +4379,7 @@ like:<a href="#appendix-A.1-3" class="pilcrow">¶</a></p>
   "given_name": "Alice",
   "family_name": "Ng"
 }
-</pre><a href="#appendix-A.1-4" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.1-5" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -4378,7 +4388,31 @@ like:<a href="#appendix-A.1-3" class="pilcrow">¶</a></p>
         <h3 id="name-delegate-saml-validation-wi">
 <a href="#appendix-A.2" class="section-number selfRef">A.2. </a><a href="#name-delegate-saml-validation-wi" class="section-name selfRef">Delegate SAML Validation with Introspection</a>
         </h3>
-<div class="lang-http sourcecode" id="appendix-A.2-1">
+<p id="appendix-A.2-1">The calendar application wants to avoid implementing SAML XML signature
+validation and assertion processing entirely. It uses an SP-initiated flow:
+before redirecting Alice to the IdP, it generates an <code>AuthnRequest</code> and saves
+local state including the request ID and ACS URL. When the IdP returns a signed
+SAML Response to the ACS, the application submits it directly to the AS's
+introspection endpoint rather than parsing it. The AS validates the XML
+signatures, checks the assertion against all profile rules, and returns
+normalized claims alongside SAML protocol metadata as JSON. The application
+then correlates the returned <code>saml</code> values against its stored request state to
+confirm the response was intended for this flow, and uses the <code>claims</code> object
+to establish Alice's session.<a href="#appendix-A.2-1" class="pilcrow">¶</a></p>
+<p id="appendix-A.2-2">Before redirecting Alice to the IdP, the SP stores local request state such as:<a href="#appendix-A.2-2" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="appendix-A.2-3">
+<pre>
+{
+  "request_id": "_sp-authnrequest-8f3a",
+  "acs_url": "https://calendar.example.com/saml/acs",
+  "sp_entity_id": "https://calendar.example.com/saml/sp",
+  "idp_entity_id": "https://login.example.com/idp"
+}
+</pre><a href="#appendix-A.2-3" class="pilcrow">¶</a>
+</div>
+<p id="appendix-A.2-4">After the IdP returns a SAML Response to the ACS, the application submits it
+to the introspection endpoint:<a href="#appendix-A.2-4" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="appendix-A.2-5">
 <pre>
 POST /introspect HTTP/1.1
 Host: login.example.com
@@ -4387,9 +4421,9 @@ Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
 
 token=PHNhbWwycDpSZXNwb25zZSB4bWxuczpzYW1sMj0iLi4uIiB4bWxuczpzYW1sMnA9Ii4uLiI-Li4uPC9zYW1sMnA6UmVzcG9uc2U-
 &amp;token_type_hint=urn:ietf:params:oauth:token-type:saml2
-</pre><a href="#appendix-A.2-1" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.2-5" class="pilcrow">¶</a>
 </div>
-<div class="lang-json sourcecode" id="appendix-A.2-2">
+<div class="lang-json sourcecode" id="appendix-A.2-6">
 <pre>
 {
   "active": true,
@@ -4429,24 +4463,12 @@ token=PHNhbWwycDpSZXNwb25zZSB4bWxuczpzYW1sMj0iLi4uIiB4bWxuczpzYW1sMnA9Ii4uLiI-Li
     "family_name": "Ng"
   }
 }
-</pre><a href="#appendix-A.2-2" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.2-6" class="pilcrow">¶</a>
 </div>
-<p id="appendix-A.2-3">Before redirecting the user to the SAML IdP, the SP creates an AuthnRequest and
-stores local request state such as:<a href="#appendix-A.2-3" class="pilcrow">¶</a></p>
-<div class="lang-json sourcecode" id="appendix-A.2-4">
-<pre>
-{
-  "request_id": "_sp-authnrequest-8f3a",
-  "acs_url": "https://calendar.example.com/saml/acs",
-  "sp_entity_id": "https://calendar.example.com/saml/sp",
-  "idp_entity_id": "https://login.example.com/idp"
-}
-</pre><a href="#appendix-A.2-4" class="pilcrow">¶</a>
-</div>
-<p id="appendix-A.2-5">After the authorization server validates XML signatures and SAML assertion
-processing rules, the SP performs local correlation and location checks over the
-returned JSON values, for example:<a href="#appendix-A.2-5" class="pilcrow">¶</a></p>
-<div class="lang-text sourcecode" id="appendix-A.2-6">
+<p id="appendix-A.2-7">After the authorization server validates XML signatures and SAML assertion
+processing rules and returns the active response, the SP performs local
+correlation and location checks over the returned JSON values, for example:<a href="#appendix-A.2-7" class="pilcrow">¶</a></p>
+<div class="lang-text sourcecode" id="appendix-A.2-8">
 <pre>
 saml.input_type == "response"
 saml.response.issuer == stored.idp_entity_id
@@ -4460,7 +4482,7 @@ saml.response.status_code == "urn:oasis:names:tc:SAML:2.0:status:Success"
 saml.response.has_nested_status_code == false
 current_time &lt; saml.assertion.subject_confirmation_not_on_or_after
 current_time &lt; saml.assertion.not_on_or_after
-</pre><a href="#appendix-A.2-6" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.2-8" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -4469,8 +4491,15 @@ current_time &lt; saml.assertion.not_on_or_after
         <h3 id="name-convert-saml-to-an-access-t">
 <a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-convert-saml-to-an-access-t" class="section-name selfRef">Convert SAML to an Access Token or Refresh Token</a>
         </h3>
-<p id="appendix-A.3-1">The client can request an access token for an explicit API target:<a href="#appendix-A.3-1" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="appendix-A.3-2">
+<p id="appendix-A.3-1">The calendar application holds a SAML assertion for Alice and needs OAuth
+tokens for two different purposes: calling a protected payments API in the same
+organization, and establishing a long-lived session that can outlive the SAML
+assertion itself. Both are handled via Token Exchange; the <code>requested_token_type</code>
+parameter selects which artifact the AS issues.<a href="#appendix-A.3-1" class="pilcrow">¶</a></p>
+<p id="appendix-A.3-2">In the first case, the application needs a Bearer access token scoped to the
+payments API. It uses resource indicators to identify the target resource and
+requests only the scopes required for that service:<a href="#appendix-A.3-2" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="appendix-A.3-3">
 <pre>
 POST /token HTTP/1.1
 Host: login.example.com
@@ -4484,9 +4513,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &amp;audience=payments-api
 &amp;subject_token=PHNhbWwyOkFzc2VydGlvbiB4bWxuczpzYW1sMj0iLi4uIj4uLi48L3NhbWwyOkFzc2VydGlvbj4
 &amp;subject_token_type=urn:ietf:params:oauth:token-type:saml2
-</pre><a href="#appendix-A.3-2" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.3-3" class="pilcrow">¶</a>
 </div>
-<div class="lang-json sourcecode" id="appendix-A.3-3">
+<div class="lang-json sourcecode" id="appendix-A.3-4">
 <pre>
 {
   "issued_token_type": "urn:ietf:params:oauth:token-type:access_token",
@@ -4495,11 +4524,14 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
   "scope": "payments.read payments.write",
   "expires_in": 3600
 }
-</pre><a href="#appendix-A.3-3" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.3-4" class="pilcrow">¶</a>
 </div>
-<p id="appendix-A.3-4">Alternatively, the client can request a refresh token to bootstrap a migrated
-session:<a href="#appendix-A.3-4" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="appendix-A.3-5">
+<p id="appendix-A.3-5">In the second case, the application wants a refresh token to bootstrap a
+long-lived migrated session. It includes <code>offline_access</code> in scope alongside
+the OpenID Connect scopes it needs. The AS issues a refresh token bound to
+Alice's Local Account; subsequent refresh token grants can produce access tokens
+and ID Tokens without requiring a new SAML assertion:<a href="#appendix-A.3-5" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="appendix-A.3-6">
 <pre>
 POST /token HTTP/1.1
 Host: login.example.com
@@ -4511,9 +4543,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 &amp;scope=openid+offline_access+profile+email
 &amp;subject_token=PHNhbWwycDpSZXNwb25zZSB4bWxuczpzYW1sMj0iLi4uIiB4bWxuczpzYW1sMnA9Ii4uLiI-Li4uPC9zYW1sMnA6UmVzcG9uc2U-
 &amp;subject_token_type=urn:ietf:params:oauth:token-type:saml2
-</pre><a href="#appendix-A.3-5" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.3-6" class="pilcrow">¶</a>
 </div>
-<div class="lang-json sourcecode" id="appendix-A.3-6">
+<div class="lang-json sourcecode" id="appendix-A.3-7">
 <pre>
 {
   "issued_token_type": "urn:ietf:params:oauth:token-type:refresh_token",
@@ -4522,7 +4554,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
   "scope": "openid offline_access profile email",
   "expires_in": 1209600
 }
-</pre><a href="#appendix-A.3-6" class="pilcrow">¶</a>
+</pre><a href="#appendix-A.3-7" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
