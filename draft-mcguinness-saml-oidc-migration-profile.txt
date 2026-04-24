@@ -530,8 +530,7 @@ Table of Contents
    The introspection_token_types_supported value is a JSON array of
    strings.  Each string is a token type URI identifying a token format
    that the authorization server accepts for direct introspection at its
-   introspection endpoint according to the SAML Assertion Introspection
-   rules.
+   introspection endpoint according to Section 9.
 
    If this metadata value is omitted, no support is implied for direct
    introspection of additional token types under this profile.
@@ -543,7 +542,7 @@ Table of Contents
       present;
 
    *  the introspection endpoint MUST accept the request pattern defined
-      in SAML Assertion Introspection;
+      in Section 9;
 
    *  the authorization server SHOULD accept
       token_type_hint=urn:ietf:params:oauth:token-type:saml2.
@@ -577,8 +576,8 @@ Table of Contents
    |access tokens|                                              |                                              |                                              |
    +-------------+----------------------------------------------+----------------------------------------------+----------------------------------------------+
    |Direct SAML  |introspection_endpoint;                       |None                                          |The introspection endpoint MUST accept the    |
-   |assertion    |introspection_token_types_supported containing|                                              |request pattern defined by SAML Assertion     |
-   |introspection|urn:ietf:params:oauth:token-type:saml2        |                                              |Introspection.                                |
+   |assertion    |introspection_token_types_supported containing|                                              |request pattern defined by Section 9.         |
+   |introspection|urn:ietf:params:oauth:token-type:saml2        |                                              |                                              |
    +-------------+----------------------------------------------+----------------------------------------------+----------------------------------------------+
    |SAML Response|No separate metadata parameter                |Capability is implied only for protocol       |Support for a signed SAML Response wrapper is |
    |wrapper input|                                              |patterns where the authorization server       |optional.  If supported, the rules in         |
@@ -1054,7 +1053,7 @@ Table of Contents
    This profile does not define a token-endpoint parameter for fine-
    grained claim selection.  Claims included in a directly issued ID
    Token, and claims later made available through UserInfo, are
-   determined by the granted scope, the rules in Claim Mapping, and the
+   determined by the granted scope, the rules in Section 12, and the
    claim release policy for the relying-party relationship represented
    by the bound saml_sp_entity_id.
 
@@ -1102,7 +1101,7 @@ Table of Contents
        and is permitted for the authenticated client;
 
    5.  resolve the SAML assertion to exactly one active Local Account as
-       described in Local Subject Resolution;
+       described in Section 10;
 
    6.  resolve the requested target service set for access token
        requests using the resource and audience parameters, or the
@@ -1115,9 +1114,8 @@ Table of Contents
        to the same relying-party relationship represented by the
        existing SAML SP and the resolved target service set, if any;
 
-   8.  derive the end-user subject according to Subject Identifier
-       Mapping and any claims needed for the issued token according to
-       Claim Mapping; and
+   8.  derive the end-user subject according to Section 11 and any
+       claims needed for the issued token according to Section 12; and
 
    9.  issue the requested token type, bound to the authenticated client
        and the end-user where applicable, if the request is approved.
@@ -1181,8 +1179,7 @@ Table of Contents
    established by the SAML assertion.  In particular, later use of the
    refresh token for the same client MUST result in the same sub value
    that would have been derived directly from the SAML assertion under
-   Local Subject Resolution, Subject Identifier Mapping, and Claim
-   Mapping.
+   Section 10, Section 11, and Section 12.
 
    If Token Exchange under this profile issues a refresh token, the
    client can use the standard OAuth 2.0 refresh_token grant at the same
@@ -1191,8 +1188,8 @@ Table of Contents
    When the authorization server issues a replacement refresh token as
    part of refresh token rotation, the replacement token MUST be bound
    to the same Local Account as the original refresh token and MUST
-   produce the same sub value under Subject Identifier Mapping when used
-   by the same migrated client.
+   produce the same sub value under Section 11 when used by the same
+   migrated client.
 
    When the granted scope includes openid, the authorization server
    SHOULD return an ID Token in the first successful refresh token
@@ -1202,9 +1199,9 @@ Table of Contents
 
    *  MUST use the iss value of the authorization server;
 
-   *  MUST use the sub value defined by Subject Identifier Mapping;
+   *  MUST use the sub value defined by Section 11;
 
-   *  MUST apply the claim mapping rules in Claim Mapping; and
+   *  MUST apply the claim mapping rules in Section 12; and
 
    *  MUST preserve the original authentication time from the SAML
       AuthnStatement, if known, in the auth_time claim.
@@ -1256,9 +1253,9 @@ Table of Contents
       Any audience parameter present in the Token Exchange request MUST
       be ignored for purposes of ID Token audience construction;
 
-   *  MUST use the sub value defined by Subject Identifier Mapping;
+   *  MUST use the sub value defined by Section 11;
 
-   *  MUST apply the claim mapping rules in Claim Mapping;
+   *  MUST apply the claim mapping rules in Section 12;
 
    *  MUST preserve the original authentication time from the SAML
       AuthnStatement, if known, in the auth_time claim;
@@ -1292,7 +1289,7 @@ Table of Contents
 
    *  MUST bind any end-user authorization carried by the token to the
       resolved Local Account and to a subject representation consistent
-      with Subject Identifier Mapping;
+      with Section 11;
 
    *  MUST audience-restrict the token to the resolved target service
       set; and
@@ -1311,14 +1308,14 @@ Table of Contents
    rejected.
 
    If an access token issued under this profile is presented to the
-   UserInfo endpoint, the UserInfo response MUST conform to UserInfo
-   Responses and OIDC Output Consistency.  If the access token was
-   issued without openid, the OpenID Provider MUST reject its use at the
-   UserInfo endpoint according to [OIDC-CORE].
+   UserInfo endpoint, the UserInfo response MUST conform to
+   Section 12.3.  If the access token was issued without openid, the
+   OpenID Provider MUST reject its use at the UserInfo endpoint
+   according to [OIDC-CORE].
 
    Any representation of the end-user subject produced from an access
    token issued under this profile by the same authorization server for
-   the same client MUST be consistent with Subject Identifier Mapping.
+   the same client MUST be consistent with Section 11.
 
    This document does not define additional introspection semantics for
    access tokens issued under this profile.  If the authorization server
@@ -1458,11 +1455,10 @@ Table of Contents
        saml_sp_entity_id that matches the SAML assertion audience;
 
    4.  resolve the SAML assertion to exactly one active Local Account as
-       described in Local Subject Resolution;
+       described in Section 10;
 
-   5.  derive the end-user subject according to Subject Identifier
-       Mapping and any claims needed for the response according to Claim
-       Mapping; and
+   5.  derive the end-user subject according to Section 11 and any
+       claims needed for the response according to Section 12; and
 
    6.  apply the claim release policy for that same relying-party
        relationship before returning any claims.
@@ -1499,11 +1495,10 @@ Table of Contents
 
    The claims object:
 
-   *  MUST include the mapped sub value defined by Subject Identifier
-      Mapping;
+   *  MUST include the mapped sub value defined by Section 11;
 
    *  MAY include auth_time, acr, amr, sid, and attribute-derived claims
-      defined by Claim Mapping; and
+      defined by Section 12; and
 
    *  MUST NOT include claims that would not be releasable to the same
       relying party under this profile.
@@ -1593,7 +1588,7 @@ Table of Contents
 
    subject_confirmation_method:  String.  The Method value of the bearer
       SubjectConfirmation that the authorization server treated as
-      usable under Section 6.4.
+      usable under Section 6.5.
 
    subject_confirmation_recipient:  String.  The Recipient value from
       the SubjectConfirmationData associated with the usable bearer
@@ -1708,8 +1703,8 @@ Table of Contents
       OpenID Connect sub.
 
    *  urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress: A mutable
-      account attribute.  Treated as defined in Local Subject
-      Resolution.  MUST NOT be used as sub.
+      account attribute.  Treated as defined in Section 10.  MUST NOT be
+      used as sub.
 
    *  urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified: Deployment-
       defined semantics.  MUST NOT be used as a subject mapping input
@@ -1780,9 +1775,9 @@ Table of Contents
 
    2.  If no persisted mapping exists and the SAML assertion contains a
        valid urn:oasis:names:tc:SAML:attribute:pairwise-id attribute (as
-       validated by the rules in Subject Type Determination), the
-       authorization server MUST use that attribute value as sub and
-       MUST persist the resulting mapping.
+       validated by the rules in Section 11.2), the authorization server
+       MUST use that attribute value as sub and MUST persist the
+       resulting mapping.
 
    3.  If no persisted mapping exists and the assertion contains a
        persistent NameID (urn:oasis:names:tc:SAML:2.0:nameid-
@@ -1817,9 +1812,9 @@ Table of Contents
 
    2.  If no persisted mapping exists and the SAML assertion contains a
        valid urn:oasis:names:tc:SAML:attribute:subject-id attribute (as
-       validated by the rules in Subject Type Determination), the
-       authorization server MUST use that attribute value as sub and
-       MUST persist the resulting mapping.
+       validated by the rules in Section 11.2), the authorization server
+       MUST use that attribute value as sub and MUST persist the
+       resulting mapping.
 
    3.  If no persisted mapping exists and the assertion contains a
        persistent NameID (urn:oasis:names:tc:SAML:2.0:nameid-
@@ -1865,11 +1860,10 @@ Table of Contents
       sub.
 
    When the only usable SAML subject input is a NameID whose semantics
-   are those of an email address, and Local Subject Resolution succeeds
-   under the rules above, the authorization server MUST derive sub from
-   the resolved Stable Local Subject Key using the applicable fallback
-   rule in this section rather than using the asserted email value
-   itself.
+   are those of an email address, and Section 10 succeeds under the
+   rules above, the authorization server MUST derive sub from the
+   resolved Stable Local Subject Key using the applicable fallback rule
+   in this section rather than using the asserted email value itself.
 
    When a persistent NameID is used as an input to subject mapping, the
    authorization server MUST evaluate the identifier together with its
@@ -2118,10 +2112,10 @@ Table of Contents
 
    *  MUST include the sub claim;
 
-   *  MUST use a sub value consistent with Subject Identifier Mapping;
+   *  MUST use a sub value consistent with Section 11;
 
-   *  MUST apply the claim mapping rules in Authentication Event Claims
-      and Attribute Claims to any returned claims; and
+   *  MUST apply the claim mapping rules in Section 12.1 and
+      Section 12.2 to any returned claims; and
 
    *  MUST NOT include claims that would not be releasable to the same
       relying party under this profile.
@@ -2135,15 +2129,15 @@ Table of Contents
    migrated authorization context, the sub value in the UserInfo
    response MUST exactly match the sub value in the corresponding ID
    Token.  If the UserInfo response includes auth_time, acr, amr, or
-   sid, those values MUST be derived according to Authentication Event
-   Claims.  When an ID Token has been issued for the same migrated
-   authorization context, the authorization server MUST cache the values
-   of auth_time, acr, amr, and sid at the time of ID Token issuance and
-   MUST return those cached values in any UserInfo response for the
-   duration of the access token's validity, even if the originating SAML
-   assertion has since expired.  The UserInfo values for these claims
-   MUST match the corresponding claims in the most recently issued ID
-   Token for that migrated authorization context.
+   sid, those values MUST be derived according to Section 12.1.  When an
+   ID Token has been issued for the same migrated authorization context,
+   the authorization server MUST cache the values of auth_time, acr,
+   amr, and sid at the time of ID Token issuance and MUST return those
+   cached values in any UserInfo response for the duration of the access
+   token's validity, even if the originating SAML assertion has since
+   expired.  The UserInfo values for these claims MUST match the
+   corresponding claims in the most recently issued ID Token for that
+   migrated authorization context.
 
    This profile does not require the UserInfo response to repeat every
    claim available in an ID Token, nor does it require claims omitted
@@ -2772,7 +2766,7 @@ Appendix B.  InCommon and eduPerson Deployment Guidance
 
    Many InCommon deployments use eduPerson attributes, including the
    REFEDS Research and Scholarship attribute bundle.  The core rules in
-   Claim Mapping still govern claim typing, precedence, and subject
+   Section 12 still govern claim typing, precedence, and subject
    handling.  Within that framework, deployments commonly use the
    following mappings and constraints:
 

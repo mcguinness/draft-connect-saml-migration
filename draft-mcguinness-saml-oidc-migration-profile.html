@@ -1438,7 +1438,7 @@ needed;<a href="#section-1-4.4.1" class="pilcrow">¶</a></p>
           <p id="section-1-4.5.1">preserves subject continuity and claim continuity across the migration.<a href="#section-1-4.5.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-1-5">Where Section 6 permits it, a signed SAML <code>Response</code> wrapper carrying exactly
+<p id="section-1-5">Where <a href="#saml-input-validation" class="auto internal xref">Section 6</a> permits it, a signed SAML <code>Response</code> wrapper carrying exactly
 one bearer assertion can be submitted instead of a bare assertion.<a href="#section-1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1513,7 +1513,7 @@ input when this profile requires a derived subject value.<a href="#section-2.2-3
 </div>
 </section>
 </div>
-<div id="applicability-and-deployment-model">
+<div id="applicability">
 <section id="section-3">
       <h2 id="name-applicability-and-deploymen">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-applicability-and-deploymen" class="section-name selfRef">Applicability and Deployment Model</a>
@@ -1573,19 +1573,21 @@ Assertion, any deployment-required validation of response-level protocol fields
 such as <code>Destination</code> or <code>InResponseTo</code> remains outside this profile unless the
 deployment has separately established how those checks are performed. However,
 if a signed SAML <code>Response</code> wrapper is used, this profile does require the
-authorization server to validate the <code>Status</code> element as defined in Section 6.<a href="#section-3-11" class="pilcrow">¶</a></p>
+authorization server to validate the <code>Status</code> element as defined in
+<a href="#saml-input-validation" class="auto internal xref">Section 6</a>.<a href="#section-3-11" class="pilcrow">¶</a></p>
 <p id="section-3-12">This profile is defined only for confidential clients. Public clients are out
 of scope and <span class="bcp14">MUST NOT</span> use the Token Exchange or direct SAML assertion
 introspection patterns defined by this document.<a href="#section-3-12" class="pilcrow">¶</a></p>
 <p id="section-3-13">This profile requires SAML XML signatures sufficient to validate the effective
-assertion under Section 6. That requirement can be satisfied either by a
-signature on the assertion itself or, when permitted by Section 6, by a signed
-SAML <code>Response</code> wrapper containing exactly one effective assertion.<a href="#section-3-13" class="pilcrow">¶</a></p>
+assertion under <a href="#saml-input-validation" class="auto internal xref">Section 6</a>. That requirement can be satisfied
+either by a signature on the assertion itself or, when permitted by
+<a href="#saml-input-validation" class="auto internal xref">Section 6</a>, by a signed SAML <code>Response</code> wrapper containing
+exactly one effective assertion.<a href="#section-3-13" class="pilcrow">¶</a></p>
 <p id="section-3-14">This profile binds exactly one <code>saml_idp_entity_id</code> to an OAuth issuer.
 Deployments that need to bridge multiple SAML Identity Providers require
 separate OAuth issuer instances, each with its own <code>saml_idp_entity_id</code>
 binding.<a href="#section-3-14" class="pilcrow">¶</a></p>
-<div id="authorization-and-consent-model">
+<div id="authorization-consent-model">
 <section id="section-3.1">
         <h3 id="name-authorization-and-consent-m">
 <a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-authorization-and-consent-m" class="section-name selfRef">Authorization and Consent Model</a>
@@ -1665,7 +1667,7 @@ equivalent policy exists, the authorization server <span class="bcp14">MUST</spa
       <h2 id="name-client-registration">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-client-registration" class="section-name selfRef">Client Registration</a>
       </h2>
-<div id="samlspentityid">
+<div id="client-registration-saml-sp-entity-id">
 <section id="section-4.1">
         <h3 id="name-saml_sp_entity_id">
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-saml_sp_entity_id" class="section-name selfRef"><code>saml_sp_entity_id</code></a>
@@ -1728,12 +1730,12 @@ inconsistent.<a href="#section-4.1-10" class="pilcrow">¶</a></p>
 </div>
 </section>
 </div>
-<div id="authorization-server-metadata">
+<div id="as-metadata">
 <section id="section-5">
       <h2 id="name-authorization-server-metada">
 <a href="#section-5" class="section-number selfRef">5. </a><a href="#name-authorization-server-metada" class="section-name selfRef">Authorization Server Metadata</a>
       </h2>
-<div id="samlidpentityid">
+<div id="metadata-saml-idp-entity-id">
 <section id="section-5.1">
         <h3 id="name-saml_idp_entity_id">
 <a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-saml_idp_entity_id" class="section-name selfRef"><code>saml_idp_entity_id</code></a>
@@ -1763,7 +1765,7 @@ IdP Entity ID, and they commonly will not, because OAuth issuer values are
 HTTPS URLs with OAuth-specific discovery semantics.<a href="#section-5.1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="samlmetadatauri">
+<div id="metadata-saml-metadata-uri">
 <section id="section-5.2">
         <h3 id="name-saml_metadata_uri">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-saml_metadata_uri" class="section-name selfRef"><code>saml_metadata_uri</code></a>
@@ -1795,7 +1797,7 @@ issuer with the pre-existing SAML trust configuration.<a href="#section-5.2-4.4.
         </ul>
 </section>
 </div>
-<div id="tokenexchangerequestedtokentypessupported">
+<div id="metadata-token-exchange-requested-token-types-supported">
 <section id="section-5.3">
         <h3 id="name-token_exchange_requested_to">
 <a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-token_exchange_requested_to" class="section-name selfRef"><code>token_exchange_requested_token_types_supported</code></a>
@@ -1830,7 +1832,7 @@ Other token type URIs defined by <span>[<a href="#RFC8693" class="cite xref">RFC
 <code>urn:ietf:params:oauth:token-type:jwt</code>, are outside the scope of this profile.<a href="#section-5.3-6" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="introspectiontokentypessupported">
+<div id="metadata-introspection-token-types-supported">
 <section id="section-5.4">
         <h3 id="name-introspection_token_types_s">
 <a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-introspection_token_types_s" class="section-name selfRef"><code>introspection_token_types_supported</code></a>
@@ -1840,7 +1842,7 @@ authorization server metadata parameter.<a href="#section-5.4-1" class="pilcrow"
 <p id="section-5.4-2">The <code>introspection_token_types_supported</code> value is a JSON array of strings.
 Each string is a token type URI identifying a token format that the
 authorization server accepts for direct introspection at its introspection
-endpoint according to the SAML Assertion Introspection rules.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
+endpoint according to <a href="#saml-assertion-introspection" class="auto internal xref">Section 9</a>.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
 <p id="section-5.4-3">If this metadata value is omitted, no support is implied for direct
 introspection of additional token types under this profile.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
 <p id="section-5.4-4">When <code>introspection_token_types_supported</code> includes
@@ -1851,7 +1853,7 @@ introspection of additional token types under this profile.<a href="#section-5.4
 </li>
           <li class="normal" id="section-5.4-5.2">
             <p id="section-5.4-5.2.1">the introspection endpoint <span class="bcp14">MUST</span> accept the request pattern defined in
-SAML Assertion Introspection;<a href="#section-5.4-5.2.1" class="pilcrow">¶</a></p>
+<a href="#saml-assertion-introspection" class="auto internal xref">Section 9</a>;<a href="#section-5.4-5.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-5.4-5.3">
             <p id="section-5.4-5.3.1">the authorization server <span class="bcp14">SHOULD</span> accept
@@ -1860,7 +1862,7 @@ SAML Assertion Introspection;<a href="#section-5.4-5.2.1" class="pilcrow">¶</a>
         </ul>
 </section>
 </div>
-<div id="capability-and-metadata-matrix">
+<div id="metadata-capability-matrix">
 <section id="section-5.5">
         <h3 id="name-capability-and-metadata-mat">
 <a href="#section-5.5" class="section-number selfRef">5.5. </a><a href="#name-capability-and-metadata-mat" class="section-name selfRef">Capability and Metadata Matrix</a>
@@ -1923,13 +1925,13 @@ capabilities defined by this profile.<a href="#section-5.5-1" class="pilcrow">¶
                 <code>introspection_endpoint</code>; <code>introspection_token_types_supported</code> containing <code>urn:ietf:params:oauth:token-type:saml2</code>
 </td>
               <td class="text-left" rowspan="1" colspan="1">None</td>
-              <td class="text-left" rowspan="1" colspan="1">The introspection endpoint <span class="bcp14">MUST</span> accept the request pattern defined by SAML Assertion Introspection.</td>
+              <td class="text-left" rowspan="1" colspan="1">The introspection endpoint <span class="bcp14">MUST</span> accept the request pattern defined by <a href="#saml-assertion-introspection" class="auto internal xref">Section 9</a>.</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">SAML Response wrapper input</td>
               <td class="text-left" rowspan="1" colspan="1">No separate metadata parameter</td>
               <td class="text-left" rowspan="1" colspan="1">Capability is implied only for protocol patterns where the authorization server accepts such input</td>
-              <td class="text-left" rowspan="1" colspan="1">Support for a signed SAML <code>Response</code> wrapper is optional. If supported, the rules in Section 6.2 apply.</td>
+              <td class="text-left" rowspan="1" colspan="1">Support for a signed SAML <code>Response</code> wrapper is optional. If supported, the rules in <a href="#response-wrapper-processing" class="auto internal xref">Section 6.2</a> apply.</td>
             </tr>
           </tbody>
         </table>
@@ -1963,7 +1965,7 @@ OpenID Provider cannot publish a reliable list, it <span class="bcp14">SHOULD</s
 </div>
 </section>
 </div>
-<div id="saml-input-validation-and-binding">
+<div id="saml-input-validation">
 <section id="section-6">
       <h2 id="name-saml-input-validation-and-b">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-saml-input-validation-and-b" class="section-name selfRef">SAML Input Validation and Binding</a>
@@ -2053,7 +2055,7 @@ SAML input under this profile <span class="bcp14">MUST</span> reject any effecti
 such elements.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="signature-issuer-and-audience-binding">
+<div id="signature-issuer-audience-binding">
 <section id="section-6.4">
         <h3 id="name-signature-issuer-and-audien">
 <a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-signature-issuer-and-audien" class="section-name selfRef">Signature, Issuer, and Audience Binding</a>
@@ -2084,7 +2086,7 @@ key material, not JOSE metadata;<a href="#section-6.4-2.2.1" class="pilcrow">¶<
 <ul class="normal">
 <li class="normal" id="section-6.4-2.3.2.1">
                 <p id="section-6.4-2.3.2.1.1">the <code>Response</code> issuer matches the trusted SAML IdP Entity ID bound to the
-OAuth issuer as defined in Section 7;<a href="#section-6.4-2.3.2.1.1" class="pilcrow">¶</a></p>
+OAuth issuer as defined in <a href="#issuer-binding" class="auto internal xref">Section 7</a>;<a href="#section-6.4-2.3.2.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-6.4-2.3.2.2">
                 <p id="section-6.4-2.3.2.2.1">the top-level <code>Response/Status/StatusCode/@Value</code> is
@@ -2102,7 +2104,7 @@ including issuer, time validity (enforcing both <code>Conditions/@NotBefore</cod
 </li>
           <li id="section-6.4-2.5">
             <p id="section-6.4-2.5.1">verify that the effective <code>Assertion</code> issuer matches the trusted SAML IdP
-Entity ID bound to the OAuth issuer as defined in Section 7;<a href="#section-6.4-2.5.1" class="pilcrow">¶</a></p>
+Entity ID bound to the OAuth issuer as defined in <a href="#issuer-binding" class="auto internal xref">Section 7</a>;<a href="#section-6.4-2.5.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-6.4-2.6">
             <p id="section-6.4-2.6.1">verify that the effective <code>Assertion</code> contains at least one
@@ -2168,7 +2170,7 @@ assertion to be rejected as unusable under this profile.<a href="#section-6.5-2.
         </ul>
 </section>
 </div>
-<div id="replay-and-freshness">
+<div id="replay-freshness">
 <section id="section-6.6">
         <h3 id="name-replay-and-freshness">
 <a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-replay-and-freshness" class="section-name selfRef">Replay and Freshness</a>
@@ -2226,7 +2228,7 @@ restrictions are already typically bound to that value.<a href="#section-6.7-1" 
       </h2>
 <p id="section-7-1">This section calls out the issuer boundary that applies throughout the profile.
 Although SAML issuer validation is performed during the input processing rules
-in Section 6, the SAML assertion issuer and the OAuth issuer identify related
+in <a href="#saml-input-validation" class="auto internal xref">Section 6</a>, the SAML assertion issuer and the OAuth issuer identify related
 but distinct protocol issuers.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <p id="section-7-2">The authorization server <span class="bcp14">MUST</span> validate the SAML assertion <code>Issuer</code> against the
 <code>saml_idp_entity_id</code> value bound to the OAuth issuer. The <code>iss</code> claim in an ID
@@ -2236,7 +2238,7 @@ assertion issuer.<a href="#section-7-2" class="pilcrow">¶</a></p>
 used as a substitute for OAuth issuer metadata.<a href="#section-7-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="token-exchange-using-a-saml-assertion">
+<div id="token-exchange">
 <section id="section-8">
       <h2 id="name-token-exchange-using-a-saml">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-token-exchange-using-a-saml" class="section-name selfRef">Token Exchange Using a SAML Assertion</a>
@@ -2259,7 +2261,7 @@ SAML <code>Response</code> that conveys it, to the authorization server token en
 using Token Exchange. The issued token is determined by the
 <code>requested_token_type</code> parameter and authorization server policy. This profile
 defines issuance of refresh tokens, access tokens, and ID Tokens.<a href="#section-8-4" class="pilcrow">¶</a></p>
-<div id="request">
+<div id="token-exchange-request">
 <section id="section-8.1">
         <h3 id="name-request">
 <a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-request" class="section-name selfRef">Request</a>
@@ -2382,7 +2384,7 @@ for that relationship.<a href="#section-8.1-10.2.1" class="pilcrow">¶</a></p>
 characters (<code>=</code>). This encoding convention follows the operational form used by
 <span>[<a href="#RFC7522" class="cite xref">RFC7522</a>]</span>. When a SAML <code>&lt;Response&gt;</code> is supplied, it is used only as a signed
 wrapper from which this profile extracts the effective assertion, according to
-Section 6.<a href="#section-8.1-11" class="pilcrow">¶</a></p>
+<a href="#saml-input-validation" class="auto internal xref">Section 6</a>.<a href="#section-8.1-11" class="pilcrow">¶</a></p>
 <p id="section-8.1-12"><code>subject_token_type</code>:<a href="#section-8.1-12" class="pilcrow">¶</a></p>
 <p id="section-8.1-13"><span class="bcp14">REQUIRED</span>. The value <code>urn:ietf:params:oauth:token-type:saml2</code>.
 When a SAML <code>&lt;Response&gt;</code> wrapper is supplied, this token type identifies the
@@ -2467,7 +2469,7 @@ OpenID Connect scopes.<a href="#section-8.1-21" class="pilcrow">¶</a></p>
 <p id="section-8.1-22">This profile does not define a token-endpoint parameter for fine-grained claim
 selection. Claims included in a directly issued ID Token, and claims later made
 available through UserInfo, are determined by the granted scope, the rules in
-Claim Mapping, and the claim release policy for the relying-party relationship
+<a href="#claim-mapping" class="auto internal xref">Section 12</a>, and the claim release policy for the relying-party relationship
 represented by the bound <code>saml_sp_entity_id</code>.<a href="#section-8.1-22" class="pilcrow">¶</a></p>
 <p id="section-8.1-23"><code>resource</code>:<a href="#section-8.1-23" class="pilcrow">¶</a></p>
 <p id="section-8.1-24"><span class="bcp14">OPTIONAL</span>. For access token requests, one or more resource indicators as defined
@@ -2487,12 +2489,12 @@ method. The authenticated client <span class="bcp14">MUST</span> be a confidenti
 the <code>saml_sp_entity_id</code> that matches the SAML assertion audience.<a href="#section-8.1-29" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="authorization-server-processing">
+<div id="token-exchange-as-processing">
 <section id="section-8.2">
         <h3 id="name-authorization-server-proces">
 <a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-authorization-server-proces" class="section-name selfRef">Authorization Server Processing</a>
         </h3>
-<div id="common-processing-rules">
+<div id="token-exchange-common-processing">
 <section id="section-8.2.1">
           <h4 id="name-common-processing-rules">
 <a href="#section-8.2.1" class="section-number selfRef">8.2.1. </a><a href="#name-common-processing-rules" class="section-name selfRef">Common Processing Rules</a>
@@ -2504,7 +2506,7 @@ the <code>saml_sp_entity_id</code> that matches the SAML assertion audience.<a h
 authentication method;<a href="#section-8.2.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-8.2.1-2.2">
-              <p id="section-8.2.1-2.2.1">validate the SAML input as described in Section 6;<a href="#section-8.2.1-2.2.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.1-2.2.1">validate the SAML input as described in <a href="#saml-input-validation" class="auto internal xref">Section 6</a>;<a href="#section-8.2.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-8.2.1-2.3">
               <p id="section-8.2.1-2.3.1">verify that the authenticated client is authorized for the
@@ -2516,7 +2518,7 @@ permitted for the authenticated client;<a href="#section-8.2.1-2.4.1" class="pil
 </li>
             <li id="section-8.2.1-2.5">
               <p id="section-8.2.1-2.5.1">resolve the SAML assertion to exactly one active Local Account as described
-in Local Subject Resolution;<a href="#section-8.2.1-2.5.1" class="pilcrow">¶</a></p>
+in <a href="#local-subject-resolution" class="auto internal xref">Section 10</a>;<a href="#section-8.2.1-2.5.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-8.2.1-2.6">
               <p id="section-8.2.1-2.6.1">resolve the requested target service set for access token requests using the
@@ -2531,8 +2533,8 @@ same relying-party relationship represented by the existing SAML SP and the
 resolved target service set, if any;<a href="#section-8.2.1-2.7.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-8.2.1-2.8">
-              <p id="section-8.2.1-2.8.1">derive the end-user subject according to Subject Identifier Mapping and any
-claims needed for the issued token according to Claim Mapping; and<a href="#section-8.2.1-2.8.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.1-2.8.1">derive the end-user subject according to <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a> and
+any claims needed for the issued token according to <a href="#claim-mapping" class="auto internal xref">Section 12</a>; and<a href="#section-8.2.1-2.8.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-8.2.1-2.9">
               <p id="section-8.2.1-2.9.1">issue the requested token type, bound to the authenticated client and the
@@ -2550,17 +2552,17 @@ Local Account, more than one candidate Local Account, or a Local Account that
 is disabled, suspended, deprovisioned, or otherwise not permitted to
 authenticate.<a href="#section-8.2.1-5" class="pilcrow">¶</a></p>
 <p id="section-8.2.1-6">The authorization server <span class="bcp14">MUST</span> enforce the token-type-specific scope and target
-selection requirements defined in Section 8.1. If the authorization server
+selection requirements defined in <a href="#token-exchange-request" class="auto internal xref">Section 8.1</a>. If the authorization server
 cannot determine an acceptable target service set for an access token request,
 or if the request asks for multiple target services that policy does not allow
 to share a single token, it <span class="bcp14">MUST</span> reject the request with <code>invalid_target</code>.<a href="#section-8.2.1-6" class="pilcrow">¶</a></p>
 <p id="section-8.2.1-7">For any request that includes <code>scope</code>, the authorization server <span class="bcp14">MUST</span> apply the
-authorization and consent rules in Section 3.1. If no applicable grant policy
+authorization and consent rules in <a href="#authorization-consent-model" class="auto internal xref">Section 3.1</a>. If no applicable grant policy
 exists for a requested scope, the authorization server <span class="bcp14">MUST</span> reject the request
 with <code>invalid_scope</code>.<a href="#section-8.2.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="successful-response">
+<div id="token-exchange-successful-response">
 <section id="section-8.2.2">
           <h4 id="name-successful-response">
 <a href="#section-8.2.2" class="section-number selfRef">8.2.2. </a><a href="#name-successful-response" class="section-name selfRef">Successful Response</a>
@@ -2596,7 +2598,7 @@ types. Clients <span class="bcp14">MUST</span> interpret the <code>access_token<
 <code>issued_token_type</code>, as specified in <span>[<a href="#RFC8693" class="cite xref">RFC8693</a>]</span> Section 2.2.<a href="#section-8.2.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="refresh-token">
+<div id="token-exchange-refresh-token">
 <section id="section-8.2.3">
           <h4 id="name-refresh-token">
 <a href="#section-8.2.3" class="section-number selfRef">8.2.3. </a><a href="#name-refresh-token" class="section-name selfRef">Refresh Token</a>
@@ -2605,14 +2607,14 @@ types. Clients <span class="bcp14">MUST</span> interpret the <code>access_token<
 issued refresh token preserves the subject continuity established by the SAML
 assertion. In particular, later use of the refresh token for the same client
 <span class="bcp14">MUST</span> result in the same <code>sub</code> value that would have been derived directly from
-the SAML assertion under Local Subject Resolution, Subject Identifier Mapping,
-and Claim Mapping.<a href="#section-8.2.3-1" class="pilcrow">¶</a></p>
+the SAML assertion under <a href="#local-subject-resolution" class="auto internal xref">Section 10</a>,
+<a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a>, and <a href="#claim-mapping" class="auto internal xref">Section 12</a>.<a href="#section-8.2.3-1" class="pilcrow">¶</a></p>
 <p id="section-8.2.3-2">If Token Exchange under this profile issues a refresh token, the client can use
 the standard OAuth 2.0 <code>refresh_token</code> grant at the same authorization server.<a href="#section-8.2.3-2" class="pilcrow">¶</a></p>
 <p id="section-8.2.3-3">When the authorization server issues a replacement refresh token as part of
 refresh token rotation, the replacement token <span class="bcp14">MUST</span> be bound to the same Local
 Account as the original refresh token and <span class="bcp14">MUST</span> produce the same <code>sub</code> value
-under Subject Identifier Mapping when used by the same migrated client.<a href="#section-8.2.3-3" class="pilcrow">¶</a></p>
+under <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a> when used by the same migrated client.<a href="#section-8.2.3-3" class="pilcrow">¶</a></p>
 <p id="section-8.2.3-4">When the granted scope includes <code>openid</code>, the authorization server <span class="bcp14">SHOULD</span>
 return an ID Token in the first successful refresh token response for that
 refresh token. Returning such an ID Token gives the client the migrated subject
@@ -2622,10 +2624,10 @@ and authentication claims in a signed, verifiable format. Any returned ID Token:
               <p id="section-8.2.3-5.1.1"><span class="bcp14">MUST</span> use the <code>iss</code> value of the authorization server;<a href="#section-8.2.3-5.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-8.2.3-5.2">
-              <p id="section-8.2.3-5.2.1"><span class="bcp14">MUST</span> use the <code>sub</code> value defined by Subject Identifier Mapping;<a href="#section-8.2.3-5.2.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-5.2.1"><span class="bcp14">MUST</span> use the <code>sub</code> value defined by <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a>;<a href="#section-8.2.3-5.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-8.2.3-5.3">
-              <p id="section-8.2.3-5.3.1"><span class="bcp14">MUST</span> apply the claim mapping rules in Claim Mapping; and<a href="#section-8.2.3-5.3.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.3-5.3.1"><span class="bcp14">MUST</span> apply the claim mapping rules in <a href="#claim-mapping" class="auto internal xref">Section 12</a>; and<a href="#section-8.2.3-5.3.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-8.2.3-5.4">
               <p id="section-8.2.3-5.4.1"><span class="bcp14">MUST</span> preserve the original authentication time from the SAML
@@ -2662,7 +2664,7 @@ termination signaling <span class="bcp14">MAY</span> use the mechanisms defined 
 propagate SAML session termination events to registered OpenID Connect clients.<a href="#section-8.2.3-10" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="id-token">
+<div id="token-exchange-id-token">
 <section id="section-8.2.4">
           <h4 id="name-id-token">
 <a href="#section-8.2.4" class="section-number selfRef">8.2.4. </a><a href="#name-id-token" class="section-name selfRef">ID Token</a>
@@ -2679,10 +2681,10 @@ client's client identifier, as required by <span>[<a href="#OIDC-CORE" class="ci
 for purposes of ID Token audience construction;<a href="#section-8.2.4-2.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-8.2.4-2.3">
-              <p id="section-8.2.4-2.3.1"><span class="bcp14">MUST</span> use the <code>sub</code> value defined by Subject Identifier Mapping;<a href="#section-8.2.4-2.3.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.4-2.3.1"><span class="bcp14">MUST</span> use the <code>sub</code> value defined by <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a>;<a href="#section-8.2.4-2.3.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-8.2.4-2.4">
-              <p id="section-8.2.4-2.4.1"><span class="bcp14">MUST</span> apply the claim mapping rules in Claim Mapping;<a href="#section-8.2.4-2.4.1" class="pilcrow">¶</a></p>
+              <p id="section-8.2.4-2.4.1"><span class="bcp14">MUST</span> apply the claim mapping rules in <a href="#claim-mapping" class="auto internal xref">Section 12</a>;<a href="#section-8.2.4-2.4.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-8.2.4-2.5">
               <p id="section-8.2.4-2.5.1"><span class="bcp14">MUST</span> preserve the original authentication time from the SAML
@@ -2712,7 +2714,7 @@ authenticated client identifier.<a href="#section-8.2.4-2.9.1" class="pilcrow">�
           </ul>
 </section>
 </div>
-<div id="access-token">
+<div id="token-exchange-access-token">
 <section id="section-8.2.5">
           <h4 id="name-access-token">
 <a href="#section-8.2.5" class="section-number selfRef">8.2.5. </a><a href="#name-access-token" class="section-name selfRef">Access Token</a>
@@ -2726,8 +2728,8 @@ resolved target service set;<a href="#section-8.2.5-2.1.1" class="pilcrow">¶</a
 </li>
             <li class="normal" id="section-8.2.5-2.2">
               <p id="section-8.2.5-2.2.1"><span class="bcp14">MUST</span> bind any end-user authorization carried by the token to the resolved
-Local Account and to a subject representation consistent with Subject
-Identifier Mapping;<a href="#section-8.2.5-2.2.1" class="pilcrow">¶</a></p>
+Local Account and to a subject representation consistent with
+<a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a>;<a href="#section-8.2.5-2.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-8.2.5-2.3">
               <p id="section-8.2.5-2.3.1"><span class="bcp14">MUST</span> audience-restrict the token to the resolved target service set; and<a href="#section-8.2.5-2.3.1" class="pilcrow">¶</a></p>
@@ -2746,13 +2748,13 @@ token's resolved target service set. If the original request included
 the granted scope in the Token Exchange response <span class="bcp14">MUST</span> omit <code>openid</code> or the
 request <span class="bcp14">MUST</span> have been rejected.<a href="#section-8.2.5-3" class="pilcrow">¶</a></p>
 <p id="section-8.2.5-4">If an access token issued under this profile is presented to the UserInfo
-endpoint, the UserInfo response <span class="bcp14">MUST</span> conform to UserInfo Responses and OIDC
-Output Consistency. If the access token was issued without <code>openid</code>, the OpenID
+endpoint, the UserInfo response <span class="bcp14">MUST</span> conform to
+<a href="#userinfo-oidc-output-consistency" class="auto internal xref">Section 12.3</a>. If the access token was issued without <code>openid</code>, the OpenID
 Provider <span class="bcp14">MUST</span> reject its use at the UserInfo endpoint according to
 <span>[<a href="#OIDC-CORE" class="cite xref">OIDC-CORE</a>]</span>.<a href="#section-8.2.5-4" class="pilcrow">¶</a></p>
 <p id="section-8.2.5-5">Any representation of the end-user subject produced from an access token issued
 under this profile by the same authorization server for the same client <span class="bcp14">MUST</span> be
-consistent with Subject Identifier Mapping.<a href="#section-8.2.5-5" class="pilcrow">¶</a></p>
+consistent with <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a>.<a href="#section-8.2.5-5" class="pilcrow">¶</a></p>
 <p id="section-8.2.5-6">This document does not define additional introspection semantics for access
 tokens issued under this profile. If the authorization server supports access
 token introspection, that behavior remains governed by <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, the
@@ -2761,7 +2763,7 @@ authorization server's access token profile, and local policy.<a href="#section-
 </div>
 </section>
 </div>
-<div id="error-response">
+<div id="token-exchange-error-response">
 <section id="section-8.3">
         <h3 id="name-error-response">
 <a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-error-response" class="section-name selfRef">Error Response</a>
@@ -2790,7 +2792,7 @@ token; and<a href="#section-8.3-4.2.1" class="pilcrow">¶</a></p>
         </ul>
 <p id="section-8.3-5">The authorization server <span class="bcp14">SHOULD</span> also use <code>invalid_request</code> when the assertion
 cannot be resolved to exactly one active Local Account or when the assertion is
-rejected as replay or otherwise exhausted under Section 6.<a href="#section-8.3-5" class="pilcrow">¶</a></p>
+rejected as replay or otherwise exhausted under <a href="#saml-input-validation" class="auto internal xref">Section 6</a>.<a href="#section-8.3-5" class="pilcrow">¶</a></p>
 <p id="section-8.3-6">The authorization server <span class="bcp14">SHOULD</span> also use <code>invalid_request</code> when a currently
 asserted stable subject identifier conflicts with an existing persisted mapping
 and no explicitly authorized administrative remapping exists.<a href="#section-8.3-6" class="pilcrow">¶</a></p>
@@ -2815,7 +2817,7 @@ assertion is valid for the client and the client is authorized to receive the
 mapped subject and claims, the authorization server returns an active
 introspection response containing a JSON claims object. No OAuth access token,
 refresh token, or ID Token is issued.<a href="#section-9-2" class="pilcrow">¶</a></p>
-<div id="request-1">
+<div id="introspection-request">
 <section id="section-9.1">
         <h3 id="name-request-2">
 <a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-request-2" class="section-name selfRef">Request</a>
@@ -2883,7 +2885,7 @@ for that relationship.<a href="#section-9.1-8.2.1" class="pilcrow">¶</a></p>
 characters (<code>=</code>). This encoding convention follows the operational form used by
 <span>[<a href="#RFC7522" class="cite xref">RFC7522</a>]</span>. When a SAML <code>&lt;Response&gt;</code> is supplied, it is used only as a signed
 wrapper from which this profile extracts the effective assertion, according to
-Section 6.<a href="#section-9.1-9" class="pilcrow">¶</a></p>
+<a href="#saml-input-validation" class="auto internal xref">Section 6</a>.<a href="#section-9.1-9" class="pilcrow">¶</a></p>
 <p id="section-9.1-10"><code>token_type_hint</code>:<a href="#section-9.1-10" class="pilcrow">¶</a></p>
 <p id="section-9.1-11"><span class="bcp14">OPTIONAL</span>. If sent, the value <span class="bcp14">MUST</span> be
 <code>urn:ietf:params:oauth:token-type:saml2</code>.
@@ -2898,12 +2900,12 @@ server policy. The authenticated client <span class="bcp14">MUST</span> be autho
 <code>saml_sp_entity_id</code> that matches the SAML assertion audience.<a href="#section-9.1-13" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="authorization-server-processing-1">
+<div id="introspection-as-processing">
 <section id="section-9.2">
         <h3 id="name-authorization-server-process">
 <a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-authorization-server-process" class="section-name selfRef">Authorization Server Processing</a>
         </h3>
-<div id="common-processing-rules-1">
+<div id="introspection-common-processing">
 <section id="section-9.2.1">
           <h4 id="name-common-processing-rules-2">
 <a href="#section-9.2.1" class="section-number selfRef">9.2.1. </a><a href="#name-common-processing-rules-2" class="section-name selfRef">Common Processing Rules</a>
@@ -2914,7 +2916,7 @@ server policy. The authenticated client <span class="bcp14">MUST</span> be autho
               <p id="section-9.2.1-2.1.1">authenticate the client and authorize it to use the introspection endpoint;<a href="#section-9.2.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-9.2.1-2.2">
-              <p id="section-9.2.1-2.2.1">validate the SAML input as described in Section 6;<a href="#section-9.2.1-2.2.1" class="pilcrow">¶</a></p>
+              <p id="section-9.2.1-2.2.1">validate the SAML input as described in <a href="#saml-input-validation" class="auto internal xref">Section 6</a>;<a href="#section-9.2.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-9.2.1-2.3">
               <p id="section-9.2.1-2.3.1">verify that the authenticated client is authorized for the
@@ -2922,11 +2924,11 @@ server policy. The authenticated client <span class="bcp14">MUST</span> be autho
 </li>
             <li id="section-9.2.1-2.4">
               <p id="section-9.2.1-2.4.1">resolve the SAML assertion to exactly one active Local Account as described
-in Local Subject Resolution;<a href="#section-9.2.1-2.4.1" class="pilcrow">¶</a></p>
+in <a href="#local-subject-resolution" class="auto internal xref">Section 10</a>;<a href="#section-9.2.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-9.2.1-2.5">
-              <p id="section-9.2.1-2.5.1">derive the end-user subject according to Subject Identifier Mapping and any
-claims needed for the response according to Claim Mapping; and<a href="#section-9.2.1-2.5.1" class="pilcrow">¶</a></p>
+              <p id="section-9.2.1-2.5.1">derive the end-user subject according to <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a> and
+any claims needed for the response according to <a href="#claim-mapping" class="auto internal xref">Section 12</a>; and<a href="#section-9.2.1-2.5.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-9.2.1-2.6">
               <p id="section-9.2.1-2.6.1">apply the claim release policy for that same relying-party relationship
@@ -2935,7 +2937,7 @@ before returning any claims.<a href="#section-9.2.1-2.6.1" class="pilcrow">¶</a
           </ol>
 </section>
 </div>
-<div id="inactive-response">
+<div id="introspection-inactive-response">
 <section id="section-9.2.2">
           <h4 id="name-inactive-response">
 <a href="#section-9.2.2" class="section-number selfRef">9.2.2. </a><a href="#name-inactive-response" class="section-name selfRef">Inactive Response</a>
@@ -2949,7 +2951,7 @@ successful introspection response with <code>"active": false</code> and <span cl
 additional members.<a href="#section-9.2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="successful-response-1">
+<div id="introspection-successful-response">
 <section id="section-9.2.3">
           <h4 id="name-successful-response-2">
 <a href="#section-9.2.3" class="section-number selfRef">9.2.3. </a><a href="#name-successful-response-2" class="section-name selfRef">Successful Response</a>
@@ -2976,11 +2978,11 @@ avoids ambiguity with existing or future top-level <span>[<a href="#RFC7662" cla
 <p id="section-9.2.3-4">The <code>claims</code> object:<a href="#section-9.2.3-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-9.2.3-5.1">
-              <p id="section-9.2.3-5.1.1"><span class="bcp14">MUST</span> include the mapped <code>sub</code> value defined by Subject Identifier Mapping;<a href="#section-9.2.3-5.1.1" class="pilcrow">¶</a></p>
+              <p id="section-9.2.3-5.1.1"><span class="bcp14">MUST</span> include the mapped <code>sub</code> value defined by <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a>;<a href="#section-9.2.3-5.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-9.2.3-5.2">
               <p id="section-9.2.3-5.2.1"><span class="bcp14">MAY</span> include <code>auth_time</code>, <code>acr</code>, <code>amr</code>, <code>sid</code>, and attribute-derived claims
-defined by Claim Mapping; and<a href="#section-9.2.3-5.2.1" class="pilcrow">¶</a></p>
+defined by <a href="#claim-mapping" class="auto internal xref">Section 12</a>; and<a href="#section-9.2.3-5.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-9.2.3-5.3">
               <p id="section-9.2.3-5.3.1"><span class="bcp14">MUST NOT</span> include claims that would not be releasable to the same relying
@@ -2995,11 +2997,12 @@ authorization server <span class="bcp14">MUST NOT</span> return those values ins
 <ul class="normal">
 <li class="normal" id="section-9.2.3-9.1">
               <p id="section-9.2.3-9.1.1">every member value <span class="bcp14">MUST</span> be derived from SAML input that was successfully
-validated under Section 6;<a href="#section-9.2.3-9.1.1" class="pilcrow">¶</a></p>
+validated under <a href="#saml-input-validation" class="auto internal xref">Section 6</a>;<a href="#section-9.2.3-9.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-9.2.3-9.2">
               <p id="section-9.2.3-9.2.1">values from a SAML <code>Response</code> wrapper <span class="bcp14">MUST</span> be included only when a signed
-SAML <code>Response</code> wrapper was submitted and accepted under Section 6.2;<a href="#section-9.2.3-9.2.1" class="pilcrow">¶</a></p>
+SAML <code>Response</code> wrapper was submitted and accepted under
+<a href="#response-wrapper-processing" class="auto internal xref">Section 6.2</a>;<a href="#section-9.2.3-9.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-9.2.3-9.3">
               <p id="section-9.2.3-9.3.1">response-level values that this profile does not validate, such as
@@ -3084,7 +3087,7 @@ Assertion.<a href="#section-9.2.3-12.4.1" class="pilcrow">¶</a></p>
               <p id="section-9.2.3-14.14.1">Boolean. <code>true</code> if a nested <code>Response/Status/StatusCode/StatusCode</code> element
 was present in the submitted Response, and <code>false</code> otherwise. Under this
 profile, an active response that includes a <code>response</code> object will normally
-have this value set to <code>false</code> because Section 6.2 requires the authorization
+have this value set to <code>false</code> because <a href="#response-wrapper-processing" class="auto internal xref">Section 6.2</a> requires the authorization
 server to reject a Response wrapper that contains a nested status code.<a href="#section-9.2.3-14.14.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
@@ -3132,7 +3135,7 @@ conditions in the effective assertion.<a href="#section-9.2.3-16.8.1" class="pil
 <code>subject_confirmation_method</code>:</dt>
             <dd style="margin-left: 1.5em" id="section-9.2.3-16.14">
               <p id="section-9.2.3-16.14.1">String. The <code>Method</code> value of the bearer <code>SubjectConfirmation</code> that the
-authorization server treated as usable under Section 6.4.<a href="#section-9.2.3-16.14.1" class="pilcrow">¶</a></p>
+authorization server treated as usable under <a href="#bearer-subject-confirmation" class="auto internal xref">Section 6.5</a>.<a href="#section-9.2.3-16.14.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-9.2.3-16.15">
@@ -3169,7 +3172,7 @@ OAuth token is being issued by the introspection operation.<a href="#section-9.2
 </div>
 </section>
 </div>
-<div id="error-response-1">
+<div id="introspection-error-response">
 <section id="section-9.3">
         <h3 id="name-error-response-2">
 <a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-error-response-2" class="section-name selfRef">Error Response</a>
@@ -3260,7 +3263,7 @@ under this profile and <span class="bcp14">MUST NOT</span> be used as the OpenID
 </li>
           <li class="normal" id="section-11.1-2.3">
             <p id="section-11.1-2.3.1"><code>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</code>: A mutable account
-attribute. Treated as defined in Local Subject Resolution. <span class="bcp14">MUST NOT</span> be used
+attribute. Treated as defined in <a href="#local-subject-resolution" class="auto internal xref">Section 10</a>. <span class="bcp14">MUST NOT</span> be used
 as <code>sub</code>.<a href="#section-11.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-11.1-2.4">
@@ -3288,10 +3291,10 @@ persistent and non-reassignable.<a href="#section-11.1-3" class="pilcrow">¶</a>
 public subject or a pairwise subject. The registered <code>subject_type</code>, if present,
 <span class="bcp14">MUST</span> be used for this determination. If no <code>subject_type</code> is registered, the
 authorization server <span class="bcp14">MUST</span> apply <code>public</code> as the effective subject type, in
-accordance with Section 4.1.<a href="#section-11.2-1" class="pilcrow">¶</a></p>
+accordance with <a href="#client-registration-saml-sp-entity-id" class="auto internal xref">Section 4.1</a>.<a href="#section-11.2-1" class="pilcrow">¶</a></p>
 <p id="section-11.2-2">If multiple clients sharing the same <code>saml_sp_entity_id</code> have registered
 conflicting <code>subject_type</code> values and no single effective subject type can be
-determined per Section 4.1, the authorization server <span class="bcp14">MUST</span> fail the profile
+determined per <a href="#client-registration-saml-sp-entity-id" class="auto internal xref">Section 4.1</a>, the authorization server <span class="bcp14">MUST</span> fail the profile
 operation.<a href="#section-11.2-2" class="pilcrow">¶</a></p>
 <p id="section-11.2-3">When the authorization server uses, or would otherwise use, the
 <code>urn:oasis:names:tc:SAML:attribute:subject-id</code> or
@@ -3336,8 +3339,8 @@ reuse that mapping, subject to the mismatch handling rules above.<a href="#secti
           <li id="section-11.3-2.2">
             <p id="section-11.3-2.2.1">If no persisted mapping exists and the SAML assertion contains a valid
 <code>urn:oasis:names:tc:SAML:attribute:pairwise-id</code> attribute (as validated by
-the rules in Subject Type Determination), the authorization server <span class="bcp14">MUST</span> use
-that attribute value as <code>sub</code> and <span class="bcp14">MUST</span> persist the resulting mapping.<a href="#section-11.3-2.2.1" class="pilcrow">¶</a></p>
+the rules in <a href="#subject-type-determination" class="auto internal xref">Section 11.2</a>), the authorization server <span class="bcp14">MUST</span>
+use that attribute value as <code>sub</code> and <span class="bcp14">MUST</span> persist the resulting mapping.<a href="#section-11.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-11.3-2.3">
             <p id="section-11.3-2.3.1">If no persisted mapping exists and the assertion contains a persistent
@@ -3378,8 +3381,8 @@ reuse that mapping, subject to the mismatch handling rules above.<a href="#secti
           <li id="section-11.4-2.2">
             <p id="section-11.4-2.2.1">If no persisted mapping exists and the SAML assertion contains a valid
 <code>urn:oasis:names:tc:SAML:attribute:subject-id</code> attribute (as validated by
-the rules in Subject Type Determination), the authorization server <span class="bcp14">MUST</span> use
-that attribute value as <code>sub</code> and <span class="bcp14">MUST</span> persist the resulting mapping.<a href="#section-11.4-2.2.1" class="pilcrow">¶</a></p>
+the rules in <a href="#subject-type-determination" class="auto internal xref">Section 11.2</a>), the authorization server <span class="bcp14">MUST</span>
+use that attribute value as <code>sub</code> and <span class="bcp14">MUST</span> persist the resulting mapping.<a href="#section-11.4-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-11.4-2.3">
             <p id="section-11.4-2.3.1">If no persisted mapping exists and the assertion contains a persistent
@@ -3397,7 +3400,7 @@ authorization server <span class="bcp14">MUST</span> persist the resulting mappi
         </ol>
 </section>
 </div>
-<div id="common-rules">
+<div id="subject-identifier-common-rules">
 <section id="section-11.5">
         <h3 id="name-common-rules">
 <a href="#section-11.5" class="section-number selfRef">11.5. </a><a href="#name-common-rules" class="section-name selfRef">Common Rules</a>
@@ -3436,7 +3439,7 @@ non-persistent <code>NameID</code> format as the OpenID Connect <code>sub</code>
 </li>
         </ul>
 <p id="section-11.5-3">When the only usable SAML subject input is a <code>NameID</code> whose semantics are those
-of an email address, and Local Subject Resolution succeeds under the rules
+of an email address, and <a href="#local-subject-resolution" class="auto internal xref">Section 10</a> succeeds under the rules
 above, the authorization server <span class="bcp14">MUST</span> derive <code>sub</code> from the resolved Stable
 Local Subject Key using the applicable fallback rule in this section rather
 than using the asserted email value itself.<a href="#section-11.5-3" class="pilcrow">¶</a></p>
@@ -3704,7 +3707,7 @@ returned as private claims when both parties have a prior agreement on syntax
 and semantics.<a href="#section-12.2-15" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="userinfo-responses-and-oidc-output-consistency">
+<div id="userinfo-oidc-output-consistency">
 <section id="section-12.3">
         <h3 id="name-userinfo-responses-and-oidc">
 <a href="#section-12.3" class="section-number selfRef">12.3. </a><a href="#name-userinfo-responses-and-oidc" class="section-name selfRef">UserInfo Responses and OIDC Output Consistency</a>
@@ -3718,11 +3721,11 @@ accordance with <span>[<a href="#OIDC-CORE" class="cite xref">OIDC-CORE</a>]</sp
             <p id="section-12.3-3.1.1"><span class="bcp14">MUST</span> include the <code>sub</code> claim;<a href="#section-12.3-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-12.3-3.2">
-            <p id="section-12.3-3.2.1"><span class="bcp14">MUST</span> use a <code>sub</code> value consistent with Subject Identifier Mapping;<a href="#section-12.3-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-12.3-3.2.1"><span class="bcp14">MUST</span> use a <code>sub</code> value consistent with <a href="#subject-identifier-mapping" class="auto internal xref">Section 11</a>;<a href="#section-12.3-3.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-12.3-3.3">
-            <p id="section-12.3-3.3.1"><span class="bcp14">MUST</span> apply the claim mapping rules in Authentication Event Claims and
-Attribute Claims to any returned claims; and<a href="#section-12.3-3.3.1" class="pilcrow">¶</a></p>
+            <p id="section-12.3-3.3.1"><span class="bcp14">MUST</span> apply the claim mapping rules in <a href="#authentication-event-claims" class="auto internal xref">Section 12.1</a> and
+<a href="#attribute-claims" class="auto internal xref">Section 12.2</a> to any returned claims; and<a href="#section-12.3-3.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-12.3-3.4">
             <p id="section-12.3-3.4.1"><span class="bcp14">MUST NOT</span> include claims that would not be releasable to the same relying
@@ -3737,7 +3740,7 @@ the bound <code>saml_sp_entity_id</code>.<a href="#section-12.3-4" class="pilcro
 authorization context, the <code>sub</code> value in the UserInfo response <span class="bcp14">MUST</span> exactly
 match the <code>sub</code> value in the corresponding ID Token. If the UserInfo response
 includes <code>auth_time</code>, <code>acr</code>, <code>amr</code>, or <code>sid</code>, those values <span class="bcp14">MUST</span> be derived
-according to Authentication Event Claims. When an ID Token has been issued for the same
+according to <a href="#authentication-event-claims" class="auto internal xref">Section 12.1</a>. When an ID Token has been issued for the same
 migrated authorization context, the authorization server <span class="bcp14">MUST</span> cache the values
 of <code>auth_time</code>, <code>acr</code>, <code>amr</code>, and <code>sid</code> at the time of ID Token issuance and
 <span class="bcp14">MUST</span> return those cached values in any UserInfo response for the duration of
@@ -3788,8 +3791,8 @@ the same assertion element being processed; and<a href="#section-13-3.1.1" class
           <p id="section-13-3.2.1">when the authorization server relies on a signed SAML <code>Response</code> wrapper, it
 <span class="bcp14">MUST</span> verify that the element referenced by the signature's <code>Reference/@URI</code>
 is the same <code>Response</code> element being processed, and that the effective
-enclosed assertion selected under Section 6 is the unique assertion bound to
-that validated wrapper.<a href="#section-13-3.2.1" class="pilcrow">¶</a></p>
+enclosed assertion selected under <a href="#saml-input-validation" class="auto internal xref">Section 6</a> is the unique
+assertion bound to that validated wrapper.<a href="#section-13-3.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-13-4">The authorization server <span class="bcp14">MUST</span> reject any document structure where these
@@ -3822,7 +3825,7 @@ specifications that they extend.<a href="#section-13-8" class="pilcrow">¶</a></
 <p id="section-13-9">SAML assertions used with Token Exchange or introspection are bearer artifacts.
 Authorization servers <span class="bcp14">MUST</span> detect and prevent replay of the same assertion
 according to the security properties of the underlying SAML deployment, any
-SAML <code>OneTimeUse</code> condition, and the replay rules in Section 6. Client
+SAML <code>OneTimeUse</code> condition, and the replay rules in <a href="#saml-input-validation" class="auto internal xref">Section 6</a>. Client
 authentication alone is not sufficient
 protection against replay of a stolen assertion. Authorization servers deployed
 across multiple nodes <span class="bcp14">MUST</span> ensure that assertion identifier state used for
@@ -3902,7 +3905,7 @@ indirection of token issuance.<a href="#section-14-6" class="pilcrow">¶</a></p>
       <h2 id="name-iana-considerations">
 <a href="#section-15" class="section-number selfRef">15. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<div id="oauth-dynamic-client-registration-metadata">
+<div id="iana-client-registration-metadata">
 <section id="section-15.1">
         <h3 id="name-oauth-dynamic-client-regist">
 <a href="#section-15.1" class="section-number selfRef">15.1. </a><a href="#name-oauth-dynamic-client-regist" class="section-name selfRef">OAuth Dynamic Client Registration Metadata</a>
@@ -3921,12 +3924,12 @@ entity bound to the client for migration and subject continuity<a href="#section
             <p id="section-15.1-2.3.1">Change Controller: IESG<a href="#section-15.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.1-2.4">
-            <p id="section-15.1-2.4.1">Specification Document(s): This document, Section 4.1<a href="#section-15.1-2.4.1" class="pilcrow">¶</a></p>
+            <p id="section-15.1-2.4.1">Specification Document(s): This document, <a href="#client-registration-saml-sp-entity-id" class="auto internal xref">Section 4.1</a><a href="#section-15.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
-<div id="oauth-authorization-server-metadata">
+<div id="iana-as-metadata">
 <section id="section-15.2">
         <h3 id="name-oauth-authorization-server-">
 <a href="#section-15.2" class="section-number selfRef">15.2. </a><a href="#name-oauth-authorization-server-" class="section-name selfRef">OAuth Authorization Server Metadata</a>
@@ -3945,7 +3948,7 @@ bound to the authorization server issuer<a href="#section-15.2-2.2.1" class="pil
             <p id="section-15.2-2.3.1">Change Controller: IESG<a href="#section-15.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.2-2.4">
-            <p id="section-15.2-2.4.1">Specification Document(s): This document, Section 5.1<a href="#section-15.2-2.4.1" class="pilcrow">¶</a></p>
+            <p id="section-15.2-2.4.1">Specification Document(s): This document, <a href="#metadata-saml-idp-entity-id" class="auto internal xref">Section 5.1</a><a href="#section-15.2-2.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.2-2.5">
             <p id="section-15.2-2.5.1">Metadata Name: <code>saml_metadata_uri</code><a href="#section-15.2-2.5.1" class="pilcrow">¶</a></p>
@@ -3958,7 +3961,7 @@ Identity Provider entity bound to the authorization server issuer<a href="#secti
             <p id="section-15.2-2.7.1">Change Controller: IESG<a href="#section-15.2-2.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.2-2.8">
-            <p id="section-15.2-2.8.1">Specification Document(s): This document, Section 5.2<a href="#section-15.2-2.8.1" class="pilcrow">¶</a></p>
+            <p id="section-15.2-2.8.1">Specification Document(s): This document, <a href="#metadata-saml-metadata-uri" class="auto internal xref">Section 5.2</a><a href="#section-15.2-2.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.2-2.9">
             <p id="section-15.2-2.9.1">Metadata Name: <code>token_exchange_requested_token_types_supported</code><a href="#section-15.2-2.9.1" class="pilcrow">¶</a></p>
@@ -3971,7 +3974,7 @@ Identity Provider entity bound to the authorization server issuer<a href="#secti
             <p id="section-15.2-2.11.1">Change Controller: IESG<a href="#section-15.2-2.11.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.2-2.12">
-            <p id="section-15.2-2.12.1">Specification Document(s): This document, Section 5.3<a href="#section-15.2-2.12.1" class="pilcrow">¶</a></p>
+            <p id="section-15.2-2.12.1">Specification Document(s): This document, <a href="#metadata-token-exchange-requested-token-types-supported" class="auto internal xref">Section 5.3</a><a href="#section-15.2-2.12.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.2-2.13">
             <p id="section-15.2-2.13.1">Metadata Name: <code>introspection_token_types_supported</code><a href="#section-15.2-2.13.1" class="pilcrow">¶</a></p>
@@ -3985,12 +3988,12 @@ introspection endpoint according to this profile<a href="#section-15.2-2.14.1" c
             <p id="section-15.2-2.15.1">Change Controller: IESG<a href="#section-15.2-2.15.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.2-2.16">
-            <p id="section-15.2-2.16.1">Specification Document(s): This document, Section 5.4<a href="#section-15.2-2.16.1" class="pilcrow">¶</a></p>
+            <p id="section-15.2-2.16.1">Specification Document(s): This document, <a href="#metadata-introspection-token-types-supported" class="auto internal xref">Section 5.4</a><a href="#section-15.2-2.16.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
-<div id="oauth-token-type-hints">
+<div id="iana-token-type-hints">
 <section id="section-15.3">
         <h3 id="name-oauth-token-type-hints">
 <a href="#section-15.3" class="section-number selfRef">15.3. </a><a href="#name-oauth-token-type-hints" class="section-name selfRef">OAuth Token Type Hints</a>
@@ -4008,12 +4011,12 @@ endpoints, which use a separate registry.<a href="#section-15.3-1" class="pilcro
             <p id="section-15.3-2.2.1">Change Controller: IESG<a href="#section-15.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.3-2.3">
-            <p id="section-15.3-2.3.1">Specification Document(s): This document, Section 9.1<a href="#section-15.3-2.3.1" class="pilcrow">¶</a></p>
+            <p id="section-15.3-2.3.1">Specification Document(s): This document, <a href="#introspection-request" class="auto internal xref">Section 9.1</a><a href="#section-15.3-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
-<div id="oauth-token-introspection-response-registry">
+<div id="iana-introspection-response-registry">
 <section id="section-15.4">
         <h3 id="name-oauth-token-introspection-r">
 <a href="#section-15.4" class="section-number selfRef">15.4. </a><a href="#name-oauth-token-introspection-r" class="section-name selfRef">OAuth Token Introspection Response Registry</a>
@@ -4032,7 +4035,7 @@ values derived from the introspected SAML assertion for the authorized client<a 
             <p id="section-15.4-2.3.1">Change Controller: IESG<a href="#section-15.4-2.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.4-2.4">
-            <p id="section-15.4-2.4.1">Specification Document(s): This document, Section 9.2.3<a href="#section-15.4-2.4.1" class="pilcrow">¶</a></p>
+            <p id="section-15.4-2.4.1">Specification Document(s): This document, <a href="#introspection-successful-response" class="auto internal xref">Section 9.2.3</a><a href="#section-15.4-2.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.4-2.5">
             <p id="section-15.4-2.5.1">Response Name: <code>saml</code><a href="#section-15.4-2.5.1" class="pilcrow">¶</a></p>
@@ -4045,7 +4048,7 @@ extracted from the validated SAML input<a href="#section-15.4-2.6.1" class="pilc
             <p id="section-15.4-2.7.1">Change Controller: IESG<a href="#section-15.4-2.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-15.4-2.8">
-            <p id="section-15.4-2.8.1">Specification Document(s): This document, Section 9.2.3<a href="#section-15.4-2.8.1" class="pilcrow">¶</a></p>
+            <p id="section-15.4-2.8.1">Specification Document(s): This document, <a href="#introspection-successful-response" class="auto internal xref">Section 9.2.3</a><a href="#section-15.4-2.8.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -4449,7 +4452,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       </h2>
 <p id="appendix-B-1">This appendix is non-normative.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
 <p id="appendix-B-2">Many InCommon deployments use <code>eduPerson</code> attributes, including the REFEDS
-Research and Scholarship attribute bundle. The core rules in Claim Mapping still
+Research and Scholarship attribute bundle. The core rules in <a href="#claim-mapping" class="auto internal xref">Section 12</a> still
 govern claim typing, precedence, and subject handling. Within that framework,
 deployments commonly use the following mappings and constraints:<a href="#appendix-B-2" class="pilcrow">¶</a></p>
 <ul class="normal">
